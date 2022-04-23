@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Pulse.Core.Connections;
 
-internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
+public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
 {
     private const int SourcePort = 54551;
 

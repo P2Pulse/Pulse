@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Core", "Pulse.Core\Pulse.Core.csproj", "{984F9C48-82C3-4162-B72C-795CC2C41790}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Cli", "Pulse.Cli\Pulse.Cli.csproj", "{DBA23C35-7822-419B-B259-EAAA855858D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{984F9C48-82C3-4162-B72C-795CC2C41790}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{984F9C48-82C3-4162-B72C-795CC2C41790}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{984F9C48-82C3-4162-B72C-795CC2C41790}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBA23C35-7822-419B-B259-EAAA855858D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBA23C35-7822-419B-B259-EAAA855858D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBA23C35-7822-419B-B259-EAAA855858D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBA23C35-7822-419B-B259-EAAA855858D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
