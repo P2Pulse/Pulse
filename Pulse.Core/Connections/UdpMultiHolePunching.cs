@@ -19,51 +19,72 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
             Console.WriteLine("Tell the echo server my port is around " + predictedNextPort);
             Console.Write("What is the server's port? ");
             var serverPort = int.Parse(Console.ReadLine()!);
-            await Parallel.ForEachAsync(Enumerable.Repeat(0, 200), cancellationToken, async (_, ct) =>
+            for (int i = 0; i < 500; i++)
             {
-                var receiver = new UdpClient
+                var customCancellationTokenSource = new CancellationTokenSource();
+                await Parallel.ForEachAsync(Enumerable.Repeat(0, 1000), customCancellationTokenSource.Token, async (_, ct) =>
                 {
-                    ExclusiveAddressUse = false
-                };
-                receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-                ThreadPool.QueueUserWorkItem(async _ =>
-                {
-                    using (receiver)
+                    var receiver = new UdpClient
                     {
-                        while (!cancellationToken.IsCancellationRequested)
+                        ExclusiveAddressUse = false
+                    };
+                    receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                    ThreadPool.QueueUserWorkItem(async _ =>
+                    {
+                        using (receiver)
                         {
-                            UdpReceiveResult message;
-                            try
+                            while (!customCancellationTokenSource.Token.IsCancellationRequested)
                             {
-                                message = await receiver.ReceiveAsync(cancellationToken);
+                                UdpReceiveResult message;
+                                try
+                                {
+                                    message = await receiver.ReceiveAsync(customCancellationTokenSource.Token);
+                                }
+                                catch (Exception e)
+                                {
+                                    // Console.WriteLine(e);
+                                    // throw;
+                                    return;
+                                }
+                                Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
+                                var messageContent = Encoding.ASCII.GetString(message.Buffer);
+                                Console.WriteLine(messageContent);
                             }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e);
-                                throw;
-                            }
-                            Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
-                            var messageContent = Encoding.ASCII.GetString(message.Buffer);
-                            Console.WriteLine(messageContent);
+
+                            Console.WriteLine("juyhtgf");
                         }
+                    });
+                
+                    using var sender = new UdpClient();
+                    sender.ExclusiveAddressUse = false;
+                    sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    sender.Client.Bind(receiver.Client.LocalEndPoint);
+                    var message = Encoding.ASCII.GetBytes("Do you hear me?");
+                    try
+                    {
+                        await sender.SendAsync(message, new IPEndPoint(destination, serverPort),
+                            customCancellationTokenSource.Token);
+                    }
+                    catch
+                    {
+                        
                     }
                 });
-                
-                using var sender = new UdpClient();
-                sender.ExclusiveAddressUse = false;
-                sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                sender.Client.Bind(receiver.Client.LocalEndPoint);
-                var message = Encoding.ASCII.GetBytes("Do you hear me?");
-                await sender.SendAsync(message,new IPEndPoint(destination, serverPort), ct);
-            });
+                await Task.Delay(1000);
+                customCancellationTokenSource.Cancel();
+                await Task.Delay(100);
+                serverPort += i;
+                Console.WriteLine(i);
+                serverPort %= ushort.MaxValue;
+            }
         }
         else
         {
             Console.WriteLine("What is the client's port? ");
             var clientPort = int.Parse(Console.ReadLine()!);
             // Hole punching
-            await Parallel.ForEachAsync(Enumerable.Repeat(0, 200), cancellationToken, async (_, ct) =>
+            await Parallel.ForEachAsync(Enumerable.Repeat(0, 1000), cancellationToken, async (_, ct) =>
             {
                 var udpClient = new UdpClient
                 {
@@ -71,6 +92,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                 };
                 udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                Console.WriteLine(udpClient.Client.LocalEndPoint);
                 ThreadPool.QueueUserWorkItem(async _ =>
                 {
                     using (udpClient)
@@ -86,7 +108,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine(e);
+                                Console.WriteLine(e.StackTrace);
                                 throw;
                             }
                             Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
@@ -100,7 +122,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                 sender.ExclusiveAddressUse = false;
                 sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 sender.Client.Bind(udpClient.Client.LocalEndPoint);
-                sender.Ttl = 5;
+                sender.Ttl = 5;  //
                 var punch = Encoding.ASCII.GetBytes("In your face, NAT!");
                 await sender.SendAsync(punch,new IPEndPoint(destination, clientPort), ct);
             });
@@ -116,9 +138,13 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
         var s1Response = await GetPublicIPEndpointAsync(s1, cancellationToken);
-        var s2Response = await GetPublicIPEndpointAsync(s2, cancellationToken);
-
-        return 2 * s2Response.Port - s1Response.Port;
+        Console.WriteLine(s1Response.Port);
+        for (int i = 0; i < 5; i++)
+        {
+            var s2Response = await GetPublicIPEndpointAsync(s2, cancellationToken);
+            Console.WriteLine(s2Response.Port);
+        }
+        return s1Response.Port;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
