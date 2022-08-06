@@ -84,7 +84,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
             Console.WriteLine("What is the client's port? ");
             var clientPort = int.Parse(Console.ReadLine()!);
             // Hole punching
-            await Parallel.ForEachAsync(Enumerable.Repeat(0, 1000), cancellationToken, async (_, ct) =>
+            await Parallel.ForEachAsync(Enumerable.Repeat(0, 1000),new ParallelOptions{MaxDegreeOfParallelism = 1000}, async (_, ct) =>
             {
                 var udpClient = new UdpClient
                 {
@@ -124,7 +124,11 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                 sender.Client.Bind(udpClient.Client.LocalEndPoint);
                 sender.Ttl = 5;  //
                 var punch = Encoding.ASCII.GetBytes("In your face, NAT!");
-                await sender.SendAsync(punch,new IPEndPoint(destination, clientPort), ct);
+                while (true)
+                {
+                    await sender.SendAsync(punch,new IPEndPoint(destination, clientPort), ct);
+                    await Task.Delay(1000, ct);
+                }
             });
             Console.WriteLine("Tell the client my port is around " + predictedNextPort);
         }
@@ -135,16 +139,21 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
 
     private static async Task<int> PredictNextPortAsync(CancellationToken cancellationToken)
     {
-        var s1 = "stun.schlund.de";
-        var s2 = "stun.jumblo.com";
-        var s1Response = await GetPublicIPEndpointAsync(s1, cancellationToken);
-        Console.WriteLine(s1Response.Port);
+        var result = 0;
         for (int i = 0; i < 5; i++)
         {
+            var s1 = "stun.schlund.de";
+            var s2 = "stun.jumblo.com";
+            var s1Response = await GetPublicIPEndpointAsync(s1, cancellationToken);
             var s2Response = await GetPublicIPEndpointAsync(s2, cancellationToken);
-            Console.WriteLine(s2Response.Port);
+
+            Console.WriteLine($"{s1} is {s1Response.Port}");
+            Console.WriteLine($"{s2} is {s2Response.Port}");
+        
+            result = 2 * s2Response.Port - s1Response.Port;
         }
-        return s1Response.Port;
+
+        return result;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
