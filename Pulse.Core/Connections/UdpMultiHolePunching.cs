@@ -74,7 +74,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                 await Task.Delay(1000);
                 customCancellationTokenSource.Cancel();
                 await Task.Delay(100);
-                serverPort += i;
+                serverPort++;
                 Console.WriteLine(i);
                 serverPort %= ushort.MaxValue;
             }
