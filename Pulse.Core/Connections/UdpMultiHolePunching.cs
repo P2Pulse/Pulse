@@ -29,7 +29,7 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                         ExclusiveAddressUse = false
                     };
                     receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                    receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));  // prom
                     ThreadPool.QueueUserWorkItem(async _ =>
                     {
                         using (receiver)
@@ -51,7 +51,6 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                                 var messageContent = Encoding.ASCII.GetString(message.Buffer);
                                 Console.WriteLine(messageContent);
                             }
-
                             Console.WriteLine("juyhtgf");
                         }
                     });
@@ -60,7 +59,8 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                     sender.ExclusiveAddressUse = false;
                     sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     sender.Client.Bind(receiver.Client.LocalEndPoint);
-                    var message = Encoding.ASCII.GetBytes("Do you hear me?");
+                    var port = ((IPEndPoint)(receiver.Client.LocalEndPoint)).Port;
+                    var message = Encoding.ASCII.GetBytes($"Hello, I'm talking from {port}");
                     try
                     {
                         await sender.SendAsync(message, new IPEndPoint(destination, serverPort),
@@ -71,9 +71,9 @@ public class UdpMultiHolePunching : IConnectionEstablishmentStrategy
                         
                     }
                 });
-                await Task.Delay(1000);
+                await Task.Delay(50);
                 customCancellationTokenSource.Cancel();
-                await Task.Delay(100);
+                // await Task.Delay(100);
                 serverPort++;
                 Console.WriteLine(i);
                 serverPort %= ushort.MaxValue;
