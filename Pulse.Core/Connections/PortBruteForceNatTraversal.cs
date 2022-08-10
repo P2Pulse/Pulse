@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -11,7 +12,54 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, 
         CancellationToken cancellationToken = default)
     {
-        var shouldSend = true;
+        var receiver = new UdpClient
+        {
+            ExclusiveAddressUse = false
+        };
+        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); 
+        ThreadPool.QueueUserWorkItem(async _ =>
+        {
+            using (receiver)
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    UdpReceiveResult message;
+                    try
+                    {
+                        message = await receiver.ReceiveAsync(cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        // Console.WriteLine(e);
+                        // throw;
+                        return;
+                    }
+                    Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
+                    var messageContent = Encoding.ASCII.GetString(message.Buffer);
+                    Console.WriteLine(messageContent);
+                }
+                Console.WriteLine("juyhtgf");
+            }
+        });
+                
+        using var sender = new UdpClient();
+        sender.ExclusiveAddressUse = false;
+        sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        sender.Client.Bind(receiver.Client.LocalEndPoint);
+        var port = ((IPEndPoint)receiver.Client.LocalEndPoint).Port;
+        var message = Encoding.ASCII.GetBytes($"Hello, I'm talking from {port}");
+        var delay = TimeSpan.FromSeconds(9) / ushort.MaxValue * 100;
+        for (var i = 0;; i++)
+        {
+            var endpoint = new IPEndPoint(destination, i % ushort.MaxValue + 1);
+            await sender.SendAsync(message, message.Length, endpoint);
+            if (i % 100 is 0)
+                await Task.Delay(delay, cancellationToken);
+        }
+
+        return null;
+        /*var shouldSend = true;
         var destinationPort = 0;
         using var client = new UdpClient(SourcePort);
         _ = client.ReceiveAsync(cancellationToken)
@@ -40,6 +88,6 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             await destination.SendMessageAsync(client, destinationPort, message: "Yayy");
         }
         // TODO - should listen to the UdpPort and wait for an answer from the other person
-        return null;
+        return null;*/
     }
 }
