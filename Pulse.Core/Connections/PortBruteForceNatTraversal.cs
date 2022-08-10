@@ -49,13 +49,12 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         sender.Client.Bind(receiver.Client.LocalEndPoint);
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint).Port;
         var message = Encoding.ASCII.GetBytes($"Hello, I'm talking from {port}");
-        var delay = TimeSpan.FromSeconds(9) / ushort.MaxValue * 100;
-        for (var i = 0;; i++)
+        for (var i = 54448;; i++)
         {
             var endpoint = new IPEndPoint(destination, i % ushort.MaxValue + 1);
             await sender.SendAsync(message, message.Length, endpoint);
-            if (i % 100 is 0)
-                await Task.Delay(delay, cancellationToken);
+            if (i % 10 is 0)
+                await Task.Delay(1, cancellationToken);
         }
 
         return null;
