@@ -78,7 +78,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
             var server = new IPEndPoint(serverIp, 3478);
             var result = await STUNClient.QueryAsync(server, STUNQueryType.PublicIP, closeSocket: true);
-            if (result is not null)
+            if (result?.PublicEndPoint is not null)
                 return result.PublicEndPoint;
             await Task.Delay(50, cancellationToken);
         }
