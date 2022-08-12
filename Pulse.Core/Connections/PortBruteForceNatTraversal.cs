@@ -55,7 +55,11 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
                 if (connectionInitiated)
-                    return receiver.Client;
+                {
+                    var client = receiver.Client;
+                    receiver.Client = null!; // don't dispose the socket
+                    return client;
+                }
                 
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
