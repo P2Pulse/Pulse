@@ -7,7 +7,7 @@ namespace Pulse.Core.Connections;
 
 public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
 {
-    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination,
+    public async Task<Socket> EstablishConnectionAsync(IPAddress destination,
         CancellationToken cancellationToken = default)
     {
         var receiver = new UdpClient
@@ -19,27 +19,22 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         var connectionInitiated = false;
         ThreadPool.QueueUserWorkItem(async _ =>
         {
-            using (receiver)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                UdpReceiveResult message;
+                try
                 {
-                    UdpReceiveResult message;
-                    try
-                    {
-                        message = await receiver.ReceiveAsync(cancellationToken);
-                        connectionInitiated = true;
-                        var ack = Encoding.ASCII.GetBytes("ACK");
-                        await receiver.SendAsync(ack, ack.Length, message.RemoteEndPoint);
-                    }
-                    catch (Exception e)
-                    {
-                        return;
-                    }
-
-                    Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
-                    var messageContent = Encoding.ASCII.GetString(message.Buffer);
-                    Console.WriteLine(messageContent);
+                    message = await receiver.ReceiveAsync(cancellationToken);
+                    connectionInitiated = true;
                 }
+                catch (Exception e)
+                {
+                    return;
+                }
+
+                Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
+                var messageContent = Encoding.ASCII.GetString(message.Buffer);
+                Console.WriteLine(messageContent);
             }
         });
 
@@ -55,10 +50,13 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         Console.WriteLine("what is maximum port of the other person?: ");
         var maxPort = int.Parse(Console.ReadLine()!);
         Console.WriteLine("Starting");
-        while (!connectionInitiated)
+        while (true)
         {
-            for (var destinationPort = minPort; destinationPort <= maxPort && !connectionInitiated; destinationPort++)
+            for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
+                if (connectionInitiated)
+                    return receiver.Client;
+                
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
                 await sender.SendAsync(message, message.Length, endpoint);
@@ -69,8 +67,6 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             await Task.Delay(1232, cancellationToken);
             Console.WriteLine("loop");
         }
-
-        return null!;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
