@@ -73,10 +73,15 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
         CancellationToken cancellationToken)
     {
-        var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
-        var server = new IPEndPoint(serverIp, 3478);
-        var result = await STUNClient.QueryAsync(server, STUNQueryType.PublicIP, closeSocket: true);
-        return result.PublicEndPoint;
+        while (true)
+        {
+            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
+            var server = new IPEndPoint(serverIp, 3478);
+            var result = await STUNClient.QueryAsync(server, STUNQueryType.PublicIP, closeSocket: true);
+            if (result is not null)
+                return result.PublicEndPoint;
+            await Task.Delay(50, cancellationToken);
+        }
     }
    
     private static async Task<(int, int)> PredictMinMaxPortsAsync(CancellationToken cancellationToken)
