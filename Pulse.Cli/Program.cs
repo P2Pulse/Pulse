@@ -5,7 +5,7 @@ var strategy = new StreamEstablisher(new PortBruteForceNatTraversal());
 Console.WriteLine("Enter the other person's IP address: ");
 var destination = IPAddress.Parse(Console.ReadLine()!);
 
-var stream = await strategy.EstablishStreamAsync(destination);
+await using var stream = await strategy.EstablishStreamAsync(destination);
 
 await using var output = File.OpenWrite("output.wav");
 await stream.Input.CopyToAsync(output);
