@@ -16,6 +16,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         };
         receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+        var connectionInitiated = false;
         ThreadPool.QueueUserWorkItem(async _ =>
         {
             using (receiver)
@@ -26,6 +27,9 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                     try
                     {
                         message = await receiver.ReceiveAsync(cancellationToken);
+                        connectionInitiated = true;
+                        var ack = Encoding.ASCII.GetBytes("ACK");
+                        await receiver.SendAsync(ack, ack.Length, message.RemoteEndPoint);
                     }
                     catch (Exception e)
                     {
@@ -51,9 +55,9 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         Console.WriteLine("what is maximum port of the other person?: ");
         var maxPort = int.Parse(Console.ReadLine()!);
         Console.WriteLine("Starting");
-        while (true)
+        while (!connectionInitiated)
         {
-            for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
+            for (var destinationPort = minPort; destinationPort <= maxPort && !connectionInitiated; destinationPort++)
             {
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
@@ -65,6 +69,8 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             await Task.Delay(1232, cancellationToken);
             Console.WriteLine("loop");
         }
+
+        return null!;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
