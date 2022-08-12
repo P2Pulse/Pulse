@@ -25,6 +25,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                 try
                 {
                     message = await receiver.ReceiveAsync(cancellationToken);
+                    await receiver.Client.ConnectAsync(message.RemoteEndPoint, cancellationToken);
                     connectionInitiated = true;
                 }
                 catch (Exception e)
