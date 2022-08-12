@@ -29,8 +29,6 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                     }
                     catch (Exception e)
                     {
-                        // Console.WriteLine(e);
-                        // throw;
                         return;
                     }
 
@@ -38,8 +36,6 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                     var messageContent = Encoding.ASCII.GetString(message.Buffer);
                     Console.WriteLine(messageContent);
                 }
-
-                Console.WriteLine("juyhtgf");
             }
         });
 
@@ -48,7 +44,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         sender.Client.Bind(receiver.Client.LocalEndPoint!);
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
-        
+
         Console.WriteLine(await PredictMinMaxPortsAsync(cancellationToken));
         Console.WriteLine("what is minimum port of the other person?: ");
         var minPort = int.Parse(Console.ReadLine()!);
@@ -65,11 +61,12 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                 if (destinationPort % 10 is 0)
                     await Task.Delay(1, cancellationToken);
             }
-            
+
             await Task.Delay(1232, cancellationToken);
             Console.WriteLine("loop");
         }
     }
+
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
         CancellationToken cancellationToken)
     {
@@ -83,7 +80,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             await Task.Delay(50, cancellationToken);
         }
     }
-   
+
     private static async Task<(int, int)> PredictMinMaxPortsAsync(CancellationToken cancellationToken)
     {
         var s1 = "stun.schlund.de";
@@ -98,5 +95,4 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         max = Math.Min(max + 100, ushort.MaxValue);
         return (min, max);
     }
-
 }
