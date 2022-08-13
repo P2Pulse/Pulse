@@ -4,12 +4,12 @@ namespace Pulse.Core.Connections;
 
 internal class UdpStream : Stream
 {
-    private readonly UdpClient _udpClient;
+    private readonly UdpClient udpClient;
     private const string UseAsyncVersionMessage = "Use async version";
 
     public UdpStream(UdpClient udpClient, bool isReader)
     {
-        _udpClient = udpClient;
+        this.udpClient = udpClient;
         CanRead = isReader;
         CanWrite = !isReader;
     }
@@ -29,7 +29,7 @@ internal class UdpStream : Stream
         if (!CanRead) 
             throw new NotSupportedException();
         
-        var incomingPacket = await _udpClient.ReceiveAsync(cancellationToken);
+        var incomingPacket = await udpClient.ReceiveAsync(cancellationToken);
         var bytesRead = Math.Min(count, incomingPacket.Buffer.Length);
         Array.Copy(incomingPacket.Buffer, sourceIndex: 0, buffer, offset, bytesRead);
         return bytesRead;
@@ -40,7 +40,7 @@ internal class UdpStream : Stream
         if (!CanWrite) 
             throw new NotSupportedException();
         
-        await _udpClient.SendAsync(buffer[offset..(offset + count)], count);
+        await udpClient.SendAsync(buffer[offset..(offset + count)], count);
     }
 
     public override void Flush()

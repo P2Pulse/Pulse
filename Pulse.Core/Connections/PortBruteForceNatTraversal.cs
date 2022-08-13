@@ -74,7 +74,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         }
     }
 
-    private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
+    private static async Task<IPEndPoint> GetPublicIpEndpointAsync(string hostName,
         CancellationToken cancellationToken)
     {
         while (true)
@@ -92,8 +92,8 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
     {
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
-        var stunQueriesS1 = Enumerable.Range(0, 50).Select(i => GetPublicIPEndpointAsync(s1, cancellationToken));
-        var stunQueriesS2 = Enumerable.Range(0, 50).Select(i => GetPublicIPEndpointAsync(s2, cancellationToken));
+        var stunQueriesS1 = Enumerable.Range(0, 50).Select(i => GetPublicIpEndpointAsync(s1, cancellationToken));
+        var stunQueriesS2 = Enumerable.Range(0, 50).Select(i => GetPublicIpEndpointAsync(s2, cancellationToken));
         var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
