@@ -15,14 +15,15 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             ExclusiveAddressUse = false
         };
         receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 55555));
 
         Console.WriteLine(await PredictMinMaxPortsAsync(receiver.Client, cancellationToken));
 
         Console.WriteLine("what is minimum port of the other person?: ");
-        var minPort = int.Parse(Console.ReadLine()!);
-        Console.WriteLine("what is maximum port of the other person?: ");
-        var maxPort = int.Parse(Console.ReadLine()!);
+        // var minPort = int.Parse(Console.ReadLine()!);
+        var minPort = 55455;
+        // Console.WriteLine("what is maximum port of the other person?: ");
+        var maxPort = minPort + 200;
         Console.WriteLine("Starting");
         
         var connectionInitiated = false;
@@ -68,11 +69,10 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
                 await sender.SendAsync(message, message.Length, endpoint);
-                if (destinationPort % 10 is 0)
-                    await Task.Delay(1, cancellationToken);
+                if (destinationPort % 5 is 0)
+                    await Task.Delay(4, cancellationToken);
             }
 
-            await Task.Delay(1232, cancellationToken);
             Console.WriteLine("loop");
         }
     }
