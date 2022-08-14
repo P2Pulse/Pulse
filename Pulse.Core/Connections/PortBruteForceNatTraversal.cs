@@ -16,6 +16,15 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         };
         receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+
+        Console.WriteLine(await PredictMinMaxPortsAsync(receiver.Client, cancellationToken));
+
+        Console.WriteLine("what is minimum port of the other person?: ");
+        var minPort = int.Parse(Console.ReadLine()!);
+        Console.WriteLine("what is maximum port of the other person?: ");
+        var maxPort = int.Parse(Console.ReadLine()!);
+        Console.WriteLine("Starting");
+        
         var connectionInitiated = false;
         ThreadPool.QueueUserWorkItem(async _ =>
         {
@@ -45,12 +54,6 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         sender.Client.Bind(receiver.Client.LocalEndPoint!);
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
 
-        Console.WriteLine(await PredictMinMaxPortsAsync(cancellationToken));
-        Console.WriteLine("what is minimum port of the other person?: ");
-        var minPort = int.Parse(Console.ReadLine()!);
-        Console.WriteLine("what is maximum port of the other person?: ");
-        var maxPort = int.Parse(Console.ReadLine()!);
-        Console.WriteLine("Starting");
         while (true)
         {
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
@@ -74,26 +77,27 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         }
     }
 
-    private static async Task<IPEndPoint> GetPublicIPEndpointAsync(string hostName,
+    private static async Task<IPEndPoint> GetPublicIPEndpointAsync(Socket socket, string hostName,
         CancellationToken cancellationToken)
     {
         while (true)
         {
             var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
             var server = new IPEndPoint(serverIp, 3478);
-            var result = await STUNClient.QueryAsync(server, STUNQueryType.PublicIP, closeSocket: true);
+            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
             if (result?.PublicEndPoint is not null)
                 return result.PublicEndPoint;
             await Task.Delay(50, cancellationToken);
         }
     }
 
-    private static async Task<(int, int)> PredictMinMaxPortsAsync(CancellationToken cancellationToken)
+    private static async Task<(int, int)> PredictMinMaxPortsAsync(Socket socket,
+        CancellationToken cancellationToken)
     {
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
-        var stunQueriesS1 = Enumerable.Range(0, 50).Select(i => GetPublicIPEndpointAsync(s1, cancellationToken));
-        var stunQueriesS2 = Enumerable.Range(0, 50).Select(i => GetPublicIPEndpointAsync(s2, cancellationToken));
+        var stunQueriesS1 = Enumerable.Range(0, 2).Select(i => GetPublicIPEndpointAsync(socket, s1, cancellationToken));
+        var stunQueriesS2 = Enumerable.Range(0, 2).Select(i => GetPublicIPEndpointAsync(socket, s2, cancellationToken));
         var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
