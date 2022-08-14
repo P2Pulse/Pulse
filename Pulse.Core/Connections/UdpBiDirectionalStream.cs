@@ -4,17 +4,30 @@ namespace Pulse.Core.Connections;
 
 internal class UdpBiDirectionalStream : IBiDirectionalStream
 {
-    private readonly NetworkStream _networkStream;
+    private readonly UdpClient sender;
+    private readonly UdpClient receiver;
     public UdpBiDirectionalStream(Socket socket)
     {
-        _networkStream = new NetworkStream(socket);
+        sender = new UdpClient
+        {
+            Client = socket
+        };
+        receiver = new UdpClient
+        {
+            Client = socket
+        };
+        Input = new UdpStream(receiver, isReader: true);
+        Output = new UdpStream(sender, isReader: false);
     }
     
-    public Stream Input => _networkStream;
-    public Stream Output => _networkStream;
+    public Stream Input { get; }
+    public Stream Output { get; }
     
     public ValueTask DisposeAsync()
     {
-        return _networkStream.DisposeAsync();
+        sender.Dispose();
+        receiver.Dispose();
+        
+        return ValueTask.CompletedTask;
     }
 }
