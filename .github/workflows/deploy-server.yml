@@ -26,7 +26,7 @@ jobs:
       uses: easingthemes/ssh-deploy@v2.2.11
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-        SOURCE: "bin/Release/net6.0/publish"
+        SOURCE: "Pulse.Server/bin/Release/net6.0/publish"
         TARGET: Pulse.Server
         REMOTE_HOST: ${{ secrets.SERVER_HOST }}
         REMOTE_USER: ${{ secrets.SERVER_USER }}
