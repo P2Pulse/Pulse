@@ -17,4 +17,10 @@
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.22.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="pulse.service">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
