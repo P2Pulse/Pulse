@@ -1,4 +1,4 @@
-name: .NET
+name: Deploy Pulse.Server
 
 on:
   workflow_dispatch
