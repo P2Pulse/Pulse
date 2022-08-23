@@ -64,6 +64,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
 
+builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
+
 var app = builder.Build();
 
 
