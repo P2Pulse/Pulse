@@ -11,6 +11,9 @@ using Pulse.Server.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Register systemd integration so that this can run as a systemd service
+builder.Host.UseSystemd();
+
 // Add services to the container.
 
 builder.Services.AddControllers(options =>

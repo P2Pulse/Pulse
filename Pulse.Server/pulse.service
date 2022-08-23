@@ -2,6 +2,7 @@
 Description=Runs Pulse.Server as a Linux service
 
 [Service]
+Type=notify
 WorkingDirectory=/home/ec2-user/Pulse.Server
 ExecStart=/usr/bin/dotnet /home/ec2-user/Pulse.Server/Pulse.Server.dll
 SyslogIdentifier=Pulse
