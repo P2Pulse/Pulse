@@ -9,6 +9,8 @@ using MongoDB.Driver;
 using Pulse.Server.Conventions;
 using Pulse.Server.Persistence;
 
+DotNetEnv.Env.TraversePath().Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register systemd integration so that this can run as a systemd service
