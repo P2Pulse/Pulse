@@ -1,0 +1,18 @@
+﻿[Unit]
+Description=Runs Pulse.Server as a Linux service
+
+[Service]
+Type=notify
+WorkingDirectory=/home/ec2-user/Pulse.Server
+ExecStart=/bin/dotnet /home/ec2-user/Pulse.Server/Pulse.Server.dll
+SyslogIdentifier=Pulse
+User=ec2-user
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=ASPNETCORE_URLS=http://*:5000
+
+[Install]
+WantedBy=multi-user.target

@@ -21,6 +21,9 @@
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
 
+data/
+Logs/
+
 *.suo
 *.user
 .vs/
