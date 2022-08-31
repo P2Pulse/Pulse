@@ -26,6 +26,7 @@ internal class UdpBiDirectionalStream : IBiDirectionalStream
         {
             ExclusiveAddressUse = false
         };
+        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         receiver.Client.Bind(socketLocalEndPoint!);
         
         sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
