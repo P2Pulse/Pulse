@@ -1,9 +1,8 @@
 ﻿using System.Net;
-using System.Net.Sockets;
 
 namespace Pulse.Core.Connections;
 
-public interface IConnectionEstablishmentStrategy
+internal interface IConnectionEstablishmentStrategy
 {
-    Task<Socket> EstablishConnectionAsync(IPAddress destination, CancellationToken cancellationToken = default);
+    Task<IConnection> EstablishConnectionAsync(IPAddress destination, CancellationToken cancellationToken = default);
 }
