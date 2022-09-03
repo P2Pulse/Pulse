@@ -19,7 +19,7 @@ internal class PacketStream : Stream
     public override bool CanWrite => true;
     public override long Length => throw new NotSupportedException();
     
-    private static readonly NotSupportedException UseAsyncVersionException = new("Avoid using synchronous methods. Use the async version instead.");
+    private static NotSupportedException UseAsyncVersionException => new("Avoid using synchronous methods. Use the async version instead.");
 
     public override long Position
     {
