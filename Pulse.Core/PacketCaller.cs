@@ -13,7 +13,8 @@ internal class PacketCaller : ICaller
     
     public async Task<Call> CallAsync(string calleeUsername, CancellationToken cancellationToken = default)
     {
-        var stream = await streamEstablisher.EstablishStreamAsync(calleeUsername, cancellationToken);
-        return new Call(incomingAudio: stream, outgoingAudio: stream);
+        /*var stream = await streamEstablisher.EstablishStreamAsync(calleeUsername, cancellationToken);
+        return new Call(incomingAudio: stream, outgoingAudio: stream);*/
+        throw new NotImplementedException();
     }
 }
