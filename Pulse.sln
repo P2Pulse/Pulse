@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Cli", "Pulse.Cli\Puls
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Server", "Pulse.Server\Pulse.Server.csproj", "{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Core.Tests", "Pulse.Core.Tests\Pulse.Core.Tests.csproj", "{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

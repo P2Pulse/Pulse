@@ -5,9 +5,9 @@ using STUN;
 
 namespace Pulse.Core.Connections;
 
-public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
+internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
 {
-    public async Task<Socket> EstablishConnectionAsync(IPAddress destination,
+    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination,
         CancellationToken cancellationToken = default)
     {
         var receiver = new UdpClient
@@ -26,7 +26,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         Console.WriteLine("Starting");
         
         var connectionInitiated = false;
-        ThreadPool.QueueUserWorkItem(async _ =>
+        _ = Task.Run(async () =>
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -46,7 +46,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                 var messageContent = Encoding.ASCII.GetString(message.Buffer);
                 Console.WriteLine(messageContent);
             }
-        });
+        }, cancellationToken);
 
         using var sender = new UdpClient();
         sender.ExclusiveAddressUse = false;
@@ -62,7 +62,7 @@ public class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                 {
                     var client = receiver.Client;
                     receiver.Client = null!; // don't dispose the socket
-                    return client;
+                    throw new NotImplementedException(); // TODO: construct connection object
                 }
                 
                 var endpoint = new IPEndPoint(destination, destinationPort);

@@ -1,8 +1,9 @@
 ﻿using System.Net;
+using Pulse.Core.Connections;
 
-namespace Pulse.Core.Connections;
+namespace Pulse.Core.AudioStreaming;
 
-public class StreamEstablisher
+internal class StreamEstablisher
 {
     private readonly IConnectionEstablishmentStrategy connectionCreator;
 
@@ -11,11 +12,11 @@ public class StreamEstablisher
         this.connectionCreator = connectionCreator;
     }
     
-    public async Task<IBiDirectionalStream> EstablishStreamAsync(IPAddress destination, 
+    public async Task<Stream> EstablishStreamAsync(IPAddress destination, 
         CancellationToken cancellationToken = default)
     {
         var connection = await connectionCreator.EstablishConnectionAsync(destination, cancellationToken);
         
-        return new UdpBiDirectionalStream(connection);
+        return new PacketStream(connection);
     }
 }
