@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using Pulse.Server.Conventions;
+using Pulse.Server.Core;
 using Pulse.Server.Persistence;
 
 DotNetEnv.Env.TraversePath().Load();
@@ -71,6 +72,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
+
+builder.Services.AddSingleton(new InMemoryCallMatcher());
 
 builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
 
