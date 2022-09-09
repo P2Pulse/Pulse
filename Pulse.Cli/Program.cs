@@ -1,18 +1,30 @@
-﻿using System.Net;
-using Pulse.Core.AudioStreaming;
-using Pulse.Core.Connections;
+﻿using Pulse.Core.Calls;
 
-var strategy = new StreamEstablisher(new PortBruteForceNatTraversal());
-Console.WriteLine("Enter the other person's IP address: ");
-var destination = IPAddress.Parse(Console.ReadLine()!);
+Console.Write("Initiator or Receiver? i/r");
 
-await using var stream = await strategy.EstablishStreamAsync(destination);
-Console.WriteLine("Yotam asked me to print this");
-await using var output = File.OpenWrite("output.wav");
-await stream.Input.CopyToAsync(output, bufferSize: 512);
+var answer = Console.ReadLine();
 
-/*await Task.Delay(200);
-await using var input = File.OpenRead("input.wav");
-await input.CopyToAsync(stream.Output);*/
+var httpClient = new HttpClient
+{
+    BaseAddress = new Uri("http://SOMETHINGSOMETHING.eu-central-1.compute.amazonaws.com")
+};
+
+if (answer == "i")
+{
+    Console.WriteLine("Calling...");
+    var callInitiator = new CallInitiator(httpClient);
+    var stream = await callInitiator.CallAsync("gur");
+
+    await using var file = File.OpenRead("music.wav");
+    await file.CopyToAsync(stream);
+}
+else
+{
+    Console.WriteLine("Polling...");
+    var callPoller = new IncomingCallPoller(httpClient);
+}
+
+
+Console.WriteLine("Done");
 
 await Task.Delay(-1);
