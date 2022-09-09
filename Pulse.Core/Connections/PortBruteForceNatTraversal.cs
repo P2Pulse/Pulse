@@ -5,26 +5,23 @@ using STUN;
 
 namespace Pulse.Core.Connections;
 
-internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
+internal class PortBruteForceNatTraversal
 {
-    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination,
-        CancellationToken cancellationToken = default)
+    private readonly UdpClient receiver;
+
+    public PortBruteForceNatTraversal()
     {
-        var receiver = new UdpClient
+        receiver = new UdpClient
         {
             ExclusiveAddressUse = false
         };
         receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+    }
 
-        Console.WriteLine(await PredictMinMaxPortsAsync(receiver.Client, cancellationToken));
-
-        Console.WriteLine("what is minimum port of the other person?: ");
-        var minPort = int.Parse(Console.ReadLine()!);
-        Console.WriteLine("what is maximum port of the other person?: ");
-        var maxPort = minPort + 200;
-        Console.WriteLine("Starting");
-        
+    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
+        CancellationToken cancellationToken = default)
+    {
         var connectionInitiated = false;
         _ = Task.Run(async () =>
         {
@@ -36,6 +33,8 @@ internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
                     message = await receiver.ReceiveAsync(cancellationToken);
                     await receiver.Client.ConnectAsync(message.RemoteEndPoint, cancellationToken);
                     connectionInitiated = true;
+                    var datagram = Encoding.ASCII.GetBytes($"Success!");
+                    await receiver.SendAsync(datagram, message.RemoteEndPoint, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -60,11 +59,9 @@ internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
             {
                 if (connectionInitiated)
                 {
-                    var client = receiver.Client;
-                    receiver.Client = null!; // don't dispose the socket
-                    throw new NotImplementedException(); // TODO: construct connection object
+                    return new UdpChannel(receiver);
                 }
-                
+
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
                 await sender.SendAsync(message, message.Length, endpoint);
@@ -90,13 +87,16 @@ internal class PortBruteForceNatTraversal : IConnectionEstablishmentStrategy
         }
     }
 
-    private static async Task<(int, int)> PredictMinMaxPortsAsync(Socket socket,
-        CancellationToken cancellationToken)
+    public async Task<(int minPort, int maxPort)> PredictMinMaxPortsAsync(CancellationToken cancellationToken = default)
     {
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
-        var stunQueriesS1 = Enumerable.Range(0, 2).Select(i => GetPublicIPEndpointAsync(socket, s1, cancellationToken));
-        var stunQueriesS2 = Enumerable.Range(0, 2).Select(i => GetPublicIPEndpointAsync(socket, s2, cancellationToken));
+        var stunQueriesS1 = Enumerable.Range(0, 2)
+            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
+        
+        var stunQueriesS2 = Enumerable.Range(0, 2)
+            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
+        
         var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
