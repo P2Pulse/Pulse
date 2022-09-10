@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -73,7 +74,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
 
-builder.Services.AddSingleton(new InMemoryCallMatcher());
+builder.Services.AddSingleton<InMemoryCallMatcher>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -89,10 +90,13 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
         RequireAudience = false,
         ValidateAudience = false,
-        ValidAlgorithms = new[] {"HS256"}
+        ValidAlgorithms = new[] {"HS256"},
+        NameClaimType = "sub"
     };
     options.RequireHttpsMetadata = false; // TODO: Set up certificates
 });
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 builder.Services.AddSingleton(new MongoClient(builder.Configuration.GetConnectionString("MainMongoDBConnection")));
 
