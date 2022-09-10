@@ -64,7 +64,7 @@ internal class PortBruteForceNatTraversal
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
-                await sender.SendAsync(message, message.Length, endpoint);
+                await sender.SendAsync(message, endpoint, cancellationToken);
                 if (destinationPort % 5 is 0)
                     await Task.Delay(5, cancellationToken);
             }

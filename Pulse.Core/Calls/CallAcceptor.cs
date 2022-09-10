@@ -25,6 +25,7 @@ public class CallAcceptor
             minPort = min,
             maxPort = max,
         };
+        Console.WriteLine("Answering call...");
         var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
         response.EnsureSuccessStatusCode();
 
