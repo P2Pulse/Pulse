@@ -19,12 +19,13 @@ public class CallInitiator
 
     public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
     {
-        var (min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
+        var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
         var body = new
         {
+            callerIPv4Address = myIPv4Address,
             calleeUserName = username,
             minPort = min,
-            maxPort = max,
+            maxPort = max
         };
         var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
         response.EnsureSuccessStatusCode();

@@ -27,7 +27,7 @@ public class CallsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ConnectionDetails>> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
-        return await callMatcher.InitiateCallAsync(request, HttpContext.Connection.RemoteIpAddress!, User.Identities.First().Name!);
+        return await callMatcher.InitiateCallAsync(request, User.Identities.First().Name!);
     }
     
     /// <summary>
@@ -49,7 +49,7 @@ public class CallsController : ControllerBase
     [HttpPost("accept")]
     public ActionResult<ConnectionDetails> AcceptIncomingCallAsync([FromBody] AcceptCallRequest request)
     {
-        var userName = User.Identities.First().Name;
-        return callMatcher.AcceptIncomingCall(request, userName, HttpContext.Connection.RemoteIpAddress!.ToString());
+        var userName = User.Identities.First().Name!;
+        return callMatcher.AcceptIncomingCall(request, userName);
     }
 }

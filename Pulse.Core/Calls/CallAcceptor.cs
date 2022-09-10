@@ -19,9 +19,10 @@ public class CallAcceptor
 
     public async Task<Stream> AnswerCallAsync(CancellationToken ct = default)
     {
-        var (min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
+        var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
         var body = new
         {
+            calleeIPv4Address = myIPv4Address,
             minPort = min,
             maxPort = max,
         };

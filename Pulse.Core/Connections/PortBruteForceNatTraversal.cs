@@ -87,7 +87,7 @@ internal class PortBruteForceNatTraversal
         }
     }
 
-    public async Task<(int minPort, int maxPort)> PredictMinMaxPortsAsync(CancellationToken cancellationToken = default)
+    public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(CancellationToken cancellationToken = default)
     {
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
@@ -103,6 +103,7 @@ internal class PortBruteForceNatTraversal
         var min = ports.Min();
         min = Math.Max(min - 100, 1);
         max = Math.Min(max + 100, ushort.MaxValue);
-        return (min, max);
+        var myIp4Address = responses.First().Address;
+        return (myIp4Address, min, max);
     }
 }
