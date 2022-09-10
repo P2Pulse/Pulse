@@ -34,28 +34,28 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+
+    var scheme = new OpenApiSecurityScheme
+    {
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        },
+        Scheme = "oauth2",
+        Name = "Bearer",
+        In = ParameterLocation.Header
+    };
+    var requiredScopes = new List<string>();
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        [scheme] = requiredScopes
+    });
     
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     options.IncludeXmlComments(xmlPath);
 });
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.SaveToken = true;
-    var signingKey = builder.Configuration["Authentication:SecretKey"];
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey))
-    };
-});
-
-builder.Services.AddSingleton(new MongoClient(builder.Configuration.GetConnectionString("MainMongoDBConnection")));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     {
@@ -69,10 +69,35 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    var signingKey = builder.Configuration["Authentication:SecretKey"];
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+        RequireAudience = false,
+        ValidateAudience = false,
+        ValidAlgorithms = new[] {"HS256"}
+    };
+    options.RequireHttpsMetadata = false; // TODO: Set up certificates
+});
+
+builder.Services.AddSingleton(new MongoClient(builder.Configuration.GetConnectionString("MainMongoDBConnection")));
+
 builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -81,6 +106,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
