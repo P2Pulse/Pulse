@@ -22,7 +22,7 @@ public class CallInitiator
         var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
         var body = new
         {
-            callerIPv4Address = myIPv4Address,
+            callerIPv4Address = myIPv4Address.ToString(),
             calleeUserName = username,
             minPort = min,
             maxPort = max
