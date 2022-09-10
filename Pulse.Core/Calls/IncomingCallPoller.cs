@@ -34,7 +34,7 @@ public class IncomingCallPoller
                     // write stream to file
                     await using var fileStream = File.Create("output.wav");
                     await audioStream.CopyToAsync(fileStream, ct);
-                    Console.WriteLine("Done sending file");
+                    Console.WriteLine("Call hanged");
                 }
                 else
                 {
