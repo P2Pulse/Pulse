@@ -20,23 +20,32 @@ public class IncomingCallPoller
     {
         while (!ct.IsCancellationRequested)
         {
-            var hasCall = await httpClient.GetFromJsonAsync<bool>(Endpoint, cancellationToken: ct);
-            
-            if (hasCall)
+            try
             {
-                // TODO: interact with the user
-                var callAcceptor = new CallAcceptor(httpClient);
-                var audioStream = await callAcceptor.AnswerCallAsync(ct);
-                // write stream to file
-                await using var fileStream = File.Create("output.wav");
-                await audioStream.CopyToAsync(fileStream, ct);
-                Console.WriteLine("Done file");
+                var callRequest = await httpClient.GetFromJsonAsync<CallRequest>(Endpoint, cancellationToken: ct);
+                
+                if (callRequest.calling)
+                {
+                    var callerUsername = callRequest.username;
+                    Console.WriteLine("Call from: " + callerUsername);
+                    // TODO: interact with the user
+                    var callAcceptor = new CallAcceptor(httpClient);
+                    var audioStream = await callAcceptor.AnswerCallAsync(ct);
+                    // write stream to file
+                    await using var fileStream = File.Create("output.wav");
+                    await audioStream.CopyToAsync(fileStream, ct);
+                    Console.WriteLine("Done sending file");
+                }
+                else
+                {
+                    await Task.Delay(250, ct);
+                }
             }
-            else
+            catch (Exception e)
             {
-                await Task.Delay(250, ct);
+                Console.WriteLine(e);
+                throw;
             }
         }
-        
     }
 }

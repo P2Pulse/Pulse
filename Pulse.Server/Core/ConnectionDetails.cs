@@ -1,3 +1,3 @@
 ﻿namespace Pulse.Server.Core;
 
-public record ConnectionDetails(string RemoteIPAddress, int MinPort, int MaxPort);
+public record ConnectionDetails(string RemoteIPAddress, int MinPort, int MaxPort, string CallerUsername);

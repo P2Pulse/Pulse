@@ -27,17 +27,17 @@ public class CallsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ConnectionDetails>> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
-        return await callMatcher.InitiateCallAsync(request, HttpContext.Connection.RemoteIpAddress!);
+        return await callMatcher.InitiateCallAsync(request, HttpContext.Connection.RemoteIpAddress!, User.Identities.First().Name!);
     }
     
     /// <summary>
     /// Polls for incoming calls
     /// </summary>
-    /// <returns>True if there is an awaiting incoming call, False otherwise</returns>
+    /// <returns>Username of caller if there is an awaiting incoming call, null otherwise</returns>
     [HttpGet]
-    public ActionResult<bool> PollForIncomingCallAsync()
+    public ActionResult<CallRequest> PollForIncomingCallAsync()
     {
-        var userName = User.Identities.First().Name;
+        var userName = User.Identities.First().Name!;
         return callMatcher.PollForIncomingCall(userName);
     }
     
