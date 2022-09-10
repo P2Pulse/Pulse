@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using Pulse.Server.Conventions;
+using Pulse.Server.Core;
 using Pulse.Server.Persistence;
 
 DotNetEnv.Env.TraversePath().Load();
@@ -34,7 +35,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-
+    
     var scheme = new OpenApiSecurityScheme
     {
         Reference = new OpenApiReference
@@ -51,10 +52,13 @@ builder.Services.AddSwaggerGen(options =>
     {
         [scheme] = requiredScopes
     });
-    
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
+
+    if (builder.Environment.IsDevelopment())
+    {
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -68,6 +72,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
+
+builder.Services.AddSingleton(new InMemoryCallMatcher());
 
 builder.Services.AddAuthentication(options =>
 {
@@ -100,11 +106,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
