@@ -43,6 +43,7 @@ internal class PortBruteForceNatTraversal
         sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         sender.Client.Bind(receiver.Client.LocalEndPoint!);
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
+        Console.WriteLine("Starting to punch holes");
 
         while (true)
         {
