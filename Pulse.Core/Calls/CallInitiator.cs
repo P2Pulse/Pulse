@@ -29,6 +29,8 @@ public class CallInitiator
         };
         var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
         response.EnsureSuccessStatusCode();
+        
+        Console.WriteLine("The other person answered the call");
 
         var (remoteIpAddress, minPort, maxPort) =
             (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
