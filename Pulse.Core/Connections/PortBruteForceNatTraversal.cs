@@ -22,28 +22,19 @@ internal class PortBruteForceNatTraversal
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
+        IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         _ = Task.Run(async () =>
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                UdpReceiveResult message;
-                try
-                {
-                    message = await receiver.ReceiveAsync(cancellationToken);
-                    await receiver.Client.ConnectAsync(message.RemoteEndPoint, cancellationToken);
-                    connectionInitiated = true;
-                    var datagram = Encoding.ASCII.GetBytes($"Success!");
-                    await receiver.SendAsync(datagram, message.RemoteEndPoint, cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    return;
-                }
-
-                Console.WriteLine($"Received {message.Buffer.Length} bytes from {message.RemoteEndPoint}:");
-                var messageContent = Encoding.ASCII.GetString(message.Buffer);
-                Console.WriteLine(messageContent);
+                var message = await receiver.ReceiveAsync(cancellationToken);
+                messageRemoteEndPoint = message.RemoteEndPoint;
+                connectionInitiated = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }, cancellationToken);
 
@@ -59,6 +50,10 @@ internal class PortBruteForceNatTraversal
             {
                 if (connectionInitiated)
                 {
+                    sender.Dispose();
+                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+                    var datagram = Encoding.ASCII.GetBytes("Success!");
+                    await receiver.SendAsync(datagram, cancellationToken);
                     return new UdpChannel(receiver);
                 }
 
@@ -87,16 +82,17 @@ internal class PortBruteForceNatTraversal
         }
     }
 
-    public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(CancellationToken cancellationToken = default)
+    public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(
+        CancellationToken cancellationToken = default)
     {
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
         var stunQueriesS1 = Enumerable.Range(0, 2)
             .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
-        
+
         var stunQueriesS2 = Enumerable.Range(0, 2)
             .Select(i => GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
-        
+
         var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
