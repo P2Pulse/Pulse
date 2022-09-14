@@ -7,6 +7,7 @@ internal class UdpChannel : IConnection
 {
     private readonly UdpClient udpClient;
     private readonly Channel<Packet> channel;
+    
 
     public UdpChannel(UdpClient udpClient)
     {
@@ -20,7 +21,7 @@ internal class UdpChannel : IConnection
         while (true)
         {
             var message = await udpClient.ReceiveAsync();
-            var packet = new Packet(message.Buffer);
+            var packet = PacketEncoder.Decode(message.Buffer);
             await channel.Writer.WriteAsync(packet);
 
             if (message.Buffer.All(b => b == 0) && message.Buffer.Length is 472)
@@ -38,7 +39,8 @@ internal class UdpChannel : IConnection
     {
         try
         {
-            await udpClient.SendAsync(packet.Content, cancellationToken);
+            var messageContent = PacketEncoder.Encode(packet);
+            await udpClient.SendAsync(messageContent, cancellationToken);
             await Task.Delay(8, cancellationToken);  // TODO - delete this
         }
         catch (ObjectDisposedException e)

@@ -19,6 +19,7 @@ public class CallAcceptor
 
     public async Task<Stream> AnswerCallAsync(CancellationToken ct = default)
     {
+        // TODO: extract common logic between here and CallInitiator, to a shared function
         var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(ct);
         var body = new
         {

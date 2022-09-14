@@ -1,3 +1,3 @@
 ﻿namespace Pulse.Core.Connections;
 
-internal record Packet(ReadOnlyMemory<byte> Content);
+internal record Packet(int SerialNumber, ReadOnlyMemory<byte> Content);
