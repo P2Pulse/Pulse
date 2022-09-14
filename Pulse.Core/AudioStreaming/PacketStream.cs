@@ -7,11 +7,11 @@ internal class PacketStream : Stream
 {
     private readonly IConnection connection;
     private ReadOnlyMemory<byte> leftoverAudio;
-    private volatile int lastSendPacket;
+    private volatile int lastSentPacket;
 
     public PacketStream(IConnection connection)
     {
-        this.connection = connection;
+        this.connection = new OutOfOrderDropper(connection);
         leftoverAudio = ReadOnlyMemory<byte>.Empty;
     }
 
@@ -71,7 +71,7 @@ internal class PacketStream : Stream
 
     public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
     {
-        var serialNumber = Interlocked.Increment(ref lastSendPacket);
+        var serialNumber = Interlocked.Increment(ref lastSentPacket);
         var packet = new Packet(serialNumber, buffer);
         await connection.SendPacketAsync(packet, cancellationToken);
     }
