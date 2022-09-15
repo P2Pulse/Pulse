@@ -72,7 +72,8 @@ return aesIV
         using var ciphertext = new MemoryStream();
         await using var cs = new CryptoStream(ciphertext, aes.CreateEncryptor(), CryptoStreamMode.Write);
         await cs.WriteAsync(packet.Content);
-        await cs.DisposeAsync();
+        await cs.FlushFinalBlockAsync();
+
         return packet with { Content = ciphertext.ToArray() };
     }
 
@@ -91,7 +92,7 @@ return aesIV
         await using var cs = new CryptoStream(decryptedMessage, aes.CreateDecryptor(), CryptoStreamMode.Read);
         var contentStream = new MemoryStream();
         await cs.CopyToAsync(contentStream);
-        await cs.DisposeAsync();  //
+        await cs.FlushFinalBlockAsync();
         return encryptedPacket with { Content = contentStream.ToArray() };
     }
 
