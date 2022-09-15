@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 
 namespace Pulse.Core.Calls;
 
@@ -17,7 +16,6 @@ internal class UdpCallInitiator : ICallInitiator
 
     public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
     {
-        CryptoStream
         return await connectionFactory.ConnectAsync(async myInfo =>
         {
             var body = new
