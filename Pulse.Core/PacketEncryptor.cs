@@ -3,25 +3,6 @@ using Pulse.Core.Connections;
 
 namespace Pulse.Core;
 
-public static class Tester
-{
-    public static async Task Main()
-    {
-        var aesIV = Aes.Create().IV;
-
-        using var alice = new PacketEncryptor(aesIV);
-        using var bob = new PacketEncryptor(aesIV);
-
-        alice.SetSharedKey(bob.GetPublicKey());
-        bob.SetSharedKey(alice.GetPublicKey());
-        var packet = new Packet(3, BitConverter.GetBytes(1234567890));
-        var encrypted = await alice.EncryptAsync(packet);
-        var decrypted = await bob.DecryptAsync(encrypted);
-        Console.WriteLine("Result:");
-        Console.WriteLine(BitConverter.ToInt32(decrypted.Content.Span));
-    }
-}
-
 internal class PacketEncryptor : IDisposable
 {
     private readonly byte[] aesIV;
@@ -56,14 +37,11 @@ internal class PacketEncryptor : IDisposable
         using var aes = Aes.Create();
         aes.Key = sharedKey;
         aes.IV = iv;
+        
+        var encryptor = aes.CreateEncryptor();
 
-        using var ciphertext = new MemoryStream();
-
-        await using var cs = new CryptoStream(ciphertext, aes.CreateEncryptor(), CryptoStreamMode.Write);
-        await cs.WriteAsync(packet.Content);
-        await cs.FlushFinalBlockAsync();
-
-        return packet with { Content = ciphertext.ToArray() };
+        var encryptedContent = await CryptoTransformAsync(packet.Content, encryptor);
+        return packet with { Content = encryptedContent.ToArray() };
     }
 
     public async Task<Packet> DecryptAsync(Packet encryptedPacket)
@@ -76,12 +54,20 @@ internal class PacketEncryptor : IDisposable
         using var aes = Aes.Create();
         aes.Key = sharedKey;
         aes.IV = iv;
+        
+        var decryptor = aes.CreateDecryptor();
 
-        using var decryptedMessage = new MemoryStream(encryptedPacket.Content.ToArray());
-        await using var cs = new CryptoStream(decryptedMessage, aes.CreateDecryptor(), CryptoStreamMode.Read);
-        var contentStream = new MemoryStream();
-        await cs.CopyToAsync(contentStream);
-        return encryptedPacket with { Content = contentStream.ToArray() };
+        var decryptedContent = await CryptoTransformAsync(encryptedPacket.Content, decryptor);
+        return encryptedPacket with { Content = decryptedContent.ToArray()}; 
+    }
+
+    private static async Task<MemoryStream> CryptoTransformAsync(ReadOnlyMemory<byte> data, ICryptoTransform cryptoTransformer)
+    {
+        var dataStream = new MemoryStream();
+        await using var cs = new CryptoStream(dataStream, cryptoTransformer, CryptoStreamMode.Write);
+        await cs.WriteAsync(data);
+        await cs.FlushFinalBlockAsync();
+        return dataStream;
     }
 
     private byte[] CalculateIV(int serialNumber)
