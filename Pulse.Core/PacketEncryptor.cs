@@ -55,7 +55,7 @@ internal class EncryptedConnection : IConnection
     }
 }
 
-internal class PacketEncryptor : IDisposable // rename me todo
+internal class PacketEncryptor : IDisposable
 {
     private readonly byte[] aesIV;
     private readonly ECDiffieHellman ecDiffieHellman;
