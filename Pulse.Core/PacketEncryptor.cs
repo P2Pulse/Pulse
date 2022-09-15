@@ -22,7 +22,7 @@ public static class Tester
     }
 }
 
-public class PacketEncryptor : IDisposable
+internal class PacketEncryptor : IDisposable
 {
     private readonly byte[] aesIV;
     private readonly ECDiffieHellman ecDiffieHellman;
@@ -46,7 +46,7 @@ public class PacketEncryptor : IDisposable
         sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyECDH.PublicKey);
     }
 
-    internal async Task<Packet> EncryptAsync(Packet packet)
+    public async Task<Packet> EncryptAsync(Packet packet)
     {
         if (sharedKey == null)
             throw new InvalidOperationException("Shared key is not set");
@@ -66,7 +66,7 @@ public class PacketEncryptor : IDisposable
         return packet with { Content = ciphertext.ToArray() };
     }
 
-    internal async Task<Packet> DecryptAsync(Packet encryptedPacket)
+    public async Task<Packet> DecryptAsync(Packet encryptedPacket)
     {
         if (sharedKey == null)
             throw new InvalidOperationException("Shared key is not set");
