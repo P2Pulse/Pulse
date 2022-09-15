@@ -81,7 +81,6 @@ internal class PacketEncryptor : IDisposable
         await using var cs = new CryptoStream(decryptedMessage, aes.CreateDecryptor(), CryptoStreamMode.Read);
         var contentStream = new MemoryStream();
         await cs.CopyToAsync(contentStream);
-        await cs.FlushFinalBlockAsync();
         return encryptedPacket with { Content = contentStream.ToArray() };
     }
 
@@ -89,8 +88,7 @@ internal class PacketEncryptor : IDisposable
     {
         var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
         return aesIV
-            .Zip(serialNumberAsBytes, (x, y) => x ^ y)
-            .Cast<byte>()
+            .Zip(serialNumberAsBytes, (x, y) => (byte)(x ^ y))
             .Concat(aesIV[sizeof(int)..])
             .ToArray();
     }
