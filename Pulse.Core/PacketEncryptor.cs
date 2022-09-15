@@ -22,16 +22,15 @@ public static class Tester
     }
 }
 
-
 public class PacketEncryptor : IDisposable
 {
-    private readonly byte[] aesIv;
+    private readonly byte[] aesIV;
     private readonly ECDiffieHellman ecDiffieHellman;
     private byte[]? sharedKey;
 
-    public PacketEncryptor(byte[] aesIv)
+    public PacketEncryptor(byte[] aesIV)
     {
-        this.aesIv = aesIv;
+        this.aesIV = aesIV;
         ecDiffieHellman = ECDiffieHellman.Create();
     }
 
@@ -59,6 +58,7 @@ public class PacketEncryptor : IDisposable
         aes.IV = iv;
 
         using var ciphertext = new MemoryStream();
+
         await using var cs = new CryptoStream(ciphertext, aes.CreateEncryptor(), CryptoStreamMode.Write);
         await cs.WriteAsync(packet.Content);
         await cs.FlushFinalBlockAsync();
@@ -99,5 +99,4 @@ public class PacketEncryptor : IDisposable
     {
         ecDiffieHellman.Dispose();
     }
-
 }
