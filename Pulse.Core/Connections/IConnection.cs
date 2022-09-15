@@ -1,5 +1,4 @@
 ﻿using System.Threading.Channels;
-using Pulse.Core.AudioStreaming;
 
 namespace Pulse.Core.Connections;
 

@@ -11,7 +11,7 @@ internal class PacketStream : Stream
 
     public PacketStream(IConnection connection)
     {
-        this.connection = new OutOfOrderDropper(connection);
+        this.connection = connection;
         leftoverAudio = ReadOnlyMemory<byte>.Empty;
     }
 
