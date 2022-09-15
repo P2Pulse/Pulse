@@ -50,16 +50,11 @@ public class PacketEncryptor : IDisposable
     private byte[] CalculateIV(int serialNumber)
     {
         var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
-        var generatedIV = new byte[aesIv.Length];
-        for (var i = 0; i < aesIv.Length; i++)
-        {
-            if (i < serialNumberAsBytes.Length)
-                generatedIV[i] = (byte)(aesIv[i] ^ serialNumberAsBytes[i]);
-            else
-                generatedIV[i] = aesIv[i];
-        }
-
-        return generatedIV;
+return aesIV
+    .Zip(serialNumberAsBytes, (x, y) => x ^ y)
+    .Cast<byte>()
+    .Concat(aesIV[sizeof(int)..])
+    .ToArray();
     }
 
 
