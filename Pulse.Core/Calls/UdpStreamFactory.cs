@@ -11,6 +11,10 @@ internal class UdpStreamFactory
     {
         var connection = await EstablishP2PConnectionAsync(exchangeConnectionInfo, cancellationToken);
         connection = new OutOfOrderDropper(connection);
+        
+        var packetEncryptor = new PacketEncryptor(); // todo: continue this...
+        
+        connection = new EncryptedConnection(connection, packetEncryptor);
         return new PacketStream(connection);
     }
 
