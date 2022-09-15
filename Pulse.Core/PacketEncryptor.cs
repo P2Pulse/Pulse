@@ -47,17 +47,6 @@ public class PacketEncryptor : IDisposable
         sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyECDH.PublicKey);
     }
 
-    private byte[] CalculateIV(int serialNumber)
-    {
-        var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
-return aesIV
-    .Zip(serialNumberAsBytes, (x, y) => x ^ y)
-    .Cast<byte>()
-    .Concat(aesIV[sizeof(int)..])
-    .ToArray();
-    }
-
-
     internal async Task<Packet> EncryptAsync(Packet packet)
     {
         if (sharedKey == null)
@@ -96,6 +85,15 @@ return aesIV
         return encryptedPacket with { Content = contentStream.ToArray() };
     }
 
+    private byte[] CalculateIV(int serialNumber)
+    {
+        var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
+        return aesIV
+            .Zip(serialNumberAsBytes, (x, y) => x ^ y)
+            .Cast<byte>()
+            .Concat(aesIV[sizeof(int)..])
+            .ToArray();
+    }
 
     public void Dispose()
     {
