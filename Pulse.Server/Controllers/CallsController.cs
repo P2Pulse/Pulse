@@ -34,11 +34,16 @@ public class CallsController : ControllerBase
     /// Polls for incoming calls
     /// </summary>
     /// <returns>Username of caller if there is an awaiting incoming call, null otherwise</returns>
-    [HttpGet]
-    public ActionResult<CallRequest> PollForIncomingCallAsync()
+    [HttpGet("/incoming")]
+    public ActionResult<IncomingCall> PollForIncomingCallAsync()
     {
         var userName = User.Identities.First().Name!;
-        return callMatcher.PollForIncomingCall(userName);
+        var incomingCall = callMatcher.PollForIncomingCall(userName);
+        
+        if (incomingCall is null)
+            return NotFound();
+
+        return incomingCall;
     }
     
     /// <summary>
