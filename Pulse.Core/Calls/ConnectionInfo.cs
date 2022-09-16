@@ -1,3 +1,9 @@
 namespace Pulse.Core.Calls;
 
-internal record ConnectionInfo(string RemoteIPAddress, int MinPort, int MaxPort);
+internal record ConnectionInfo(
+    string IPAddress,
+    int MinPort,
+    int MaxPort,
+    byte[] PublicKey,
+    byte[]? IV = null
+);

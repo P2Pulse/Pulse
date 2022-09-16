@@ -1,18 +1,17 @@
-using System.Net;
 using System.Net.Http.Json;
-using Pulse.Core.AudioStreaming;
-using Pulse.Core.Connections;
 
 namespace Pulse.Core.Calls;
 
 public class IncomingCallPoller
 {
     private readonly HttpClient httpClient;
+    private readonly ICallAcceptor callAcceptor;
     private const string Endpoint = "/calls";
 
-    public IncomingCallPoller(HttpClient httpClient)
+    public IncomingCallPoller(HttpClient httpClient, ICallAcceptor callAcceptor)
     {
         this.httpClient = httpClient;
+        this.callAcceptor = callAcceptor;
         _ = PollAsync();
     }
 
@@ -29,7 +28,6 @@ public class IncomingCallPoller
                     var callerUsername = callRequest.username;
                     Console.WriteLine("Call from: " + callerUsername);
                     // TODO: interact with the user
-                    var callAcceptor = new CallAcceptor(httpClient);
                     var audioStream = await callAcceptor.AnswerCallAsync(ct);
                     // write stream to file
                     await using var fileStream = File.Create("output.wav");
