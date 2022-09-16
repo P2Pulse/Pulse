@@ -21,7 +21,7 @@ internal class UdpCallInitiator : ICallInitiator
             {
                 var body = new
                 {
-                    callerIPv4Address = myInfo.IPAddress,
+                    IPv4Address = myInfo.IPAddress,
                     calleeUserName = username,
                     minPort = myInfo.MinPort,
                     maxPort = myInfo.MaxPort,

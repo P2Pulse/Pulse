@@ -21,7 +21,7 @@ internal class UdpCallAcceptor : ICallAcceptor
             {
                 var body = new
                 {
-                    calleeIPv4Address = myInfo.IPAddress,
+                    IPv4Address = myInfo.IPAddress,
                     minPort = myInfo.MinPort,
                     maxPort = myInfo.MaxPort,
                     publicKey = myInfo.PublicKey
