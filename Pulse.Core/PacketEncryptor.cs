@@ -19,7 +19,7 @@ internal class PacketEncryptor : IDisposable
 
     [MemberNotNullWhen(true, nameof(sharedKey))]
     [MemberNotNullWhen(true, nameof(aesIV))]
-    public bool Ready => sharedKey != null && aesIV != null;
+    public bool Ready => sharedKey is not null && aesIV is not null;
 
     public void Dispose()
     {
