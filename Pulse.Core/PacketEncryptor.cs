@@ -63,11 +63,17 @@ internal class PacketEncryptor : IDisposable
         return encryptedPacket with { Content = decryptedContent.ToArray() };
     }
 
-    private static async Task<MemoryStream> CryptoTransformAsync(ReadOnlyMemory<byte> data,
-        ICryptoTransform cryptoTransformer)
+    private static async Task<MemoryStream> CryptoTransformAsync(
+        ReadOnlyMemory<byte> data,
+        ICryptoTransform cryptoTransformer
+    )
     {
         var dataStream = new MemoryStream();
-        await using var cs = new CryptoStream(dataStream, cryptoTransformer, CryptoStreamMode.Write);
+        await using var cs = new CryptoStream(
+            dataStream,
+            cryptoTransformer,
+            CryptoStreamMode.Write
+        );
         await cs.WriteAsync(data);
         await cs.FlushFinalBlockAsync();
         return dataStream;
