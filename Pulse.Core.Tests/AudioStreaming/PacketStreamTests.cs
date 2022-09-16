@@ -1,16 +1,15 @@
 ﻿using System.Threading.Channels;
 using Pulse.Core.AudioStreaming;
 using Pulse.Core.Connections;
-using System;
 
 namespace Pulse.Core.Tests.AudioStreaming;
 
 public class PacketStreamTests
 {
-    private readonly PacketStream packetStream;
-    private readonly IConnection connection;
     private readonly Channel<Packet> channel = Channel.CreateUnbounded<Packet>();
-    private readonly Random random = new(Seed: 123456);
+    private readonly IConnection connection;
+    private readonly PacketStream packetStream;
+    private readonly Random random = new(123456);
 
     public PacketStreamTests()
     {
@@ -26,7 +25,7 @@ public class PacketStreamTests
         var buffer1 = new byte[50];
         var buffer2 = new byte[50];
         await channel.Writer.WriteAsync(audio);
-        
+
         var bytesRead1 = await packetStream.ReadAsync(buffer1);
         var bytesRead2 = await packetStream.ReadAsync(buffer2);
 
@@ -35,7 +34,7 @@ public class PacketStreamTests
         buffer1.Should().Equal(audio.Content[..buffer1.Length].ToArray());
         buffer2.Should().Equal(audio.Content[buffer1.Length..].ToArray());
     }
-    
+
     [Fact]
     public async Task ReadAsync_PacketTooSmall_ShouldWaitForAnotherPacket()
     {
@@ -44,7 +43,7 @@ public class PacketStreamTests
         var buffer = new byte[100];
         await channel.Writer.WriteAsync(audio1);
         await channel.Writer.WriteAsync(audio2);
-        
+
         var bytesRead = await packetStream.ReadAsync(buffer);
 
         bytesRead.Should().Be(buffer.Length);
@@ -70,6 +69,7 @@ public class PacketStreamTests
     {
         var audio = new byte[bytes];
         random.NextBytes(audio);
-        return new Packet(audio);
+
+        return new Packet(random.Next(), audio);
     }
 }
