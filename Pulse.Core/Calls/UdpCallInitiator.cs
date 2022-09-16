@@ -22,7 +22,7 @@ internal class UdpCallInitiator : ICallInitiator
             {
                 callerIPv4Address = myInfo.IPAddress,
                 calleeUserName = username,
-                minPort = myInfo.MaxPort,
+                minPort = myInfo.MinPort,
                 maxPort = myInfo.MaxPort
             };
             var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
