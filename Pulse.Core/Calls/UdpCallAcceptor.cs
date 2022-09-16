@@ -5,8 +5,8 @@ namespace Pulse.Core.Calls;
 internal class UdpCallAcceptor : ICallAcceptor
 {
     private const string Endpoint = "/calls/accept";
-    private readonly HttpClient httpClient;
     private readonly UdpStreamFactory connectionFactory;
+    private readonly HttpClient httpClient;
 
     public UdpCallAcceptor(HttpClient httpClient, UdpStreamFactory connectionFactory)
     {
@@ -24,19 +24,17 @@ internal class UdpCallAcceptor : ICallAcceptor
                     calleeIPv4Address = myInfo.IPAddress,
                     minPort = myInfo.MinPort,
                     maxPort = myInfo.MaxPort,
-                    publicKey = myInfo.PublicKey,
+                    publicKey = myInfo.PublicKey
                 };
                 Console.WriteLine("Answering call...");
                 var response = await httpClient.PostAsJsonAsync(
                     Endpoint,
                     body,
-                    cancellationToken: ct
+                    ct
                 );
                 response.EnsureSuccessStatusCode();
 
-                return (
-                    await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct)
-                )!;
+                return (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
             },
             ct
         );

@@ -26,7 +26,7 @@ internal class UdpStreamFactory
         );
 
         var connectionInfo = await exchangeConnectionInfo(myInfo);
-        
+
         var connection = await portBruteForcer.EstablishConnectionAsync(
             IPAddress.Parse(connectionInfo.IPAddress),
             connectionInfo.MinPort,
@@ -42,5 +42,4 @@ internal class UdpStreamFactory
 
         return new PacketStream(connection);
     }
-
 }
