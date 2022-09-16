@@ -5,39 +5,40 @@ namespace Pulse.Core;
 
 internal class PacketEncryptor : IDisposable
 {
-    private readonly byte[] aesIV;
+    private byte[]? aesIV;
     private readonly ECDiffieHellman ecDiffieHellman;
     private byte[]? sharedKey;
 
-    public PacketEncryptor(byte[] aesIV)
+    public PacketEncryptor()
     {
-        this.aesIV = aesIV;
         ecDiffieHellman = ECDiffieHellman.Create();
     }
 
-    public byte[] GetPublicKey()
-    {
-        return ecDiffieHellman.PublicKey.ExportSubjectPublicKeyInfo();
-    }
+    public byte[] PublicKey => ecDiffieHellman.PublicKey.ExportSubjectPublicKeyInfo();
 
-    public void SetSharedKey(byte[] otherPartyPublicKey)
+    public void SetOtherPartyPublicKey(byte[] otherPartyPublicKey)
     {
         using var otherPartyECDH = ECDiffieHellman.Create();
         otherPartyECDH.ImportSubjectPublicKeyInfo(otherPartyPublicKey, out _);
         sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyECDH.PublicKey);
     }
 
-    public bool IsSharedKeySet => sharedKey != null;
+    public void SetAesIv(byte[] iv)
+    {
+        aesIV = iv;
+    }
+
+    public bool Ready => sharedKey != null && aesIV != null;
 
     public async Task<Packet> EncryptAsync(Packet packet)
     {
-        if (sharedKey == null)
-            throw new InvalidOperationException("Shared key is not set");
+        if (!Ready)
+            throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
 
         var iv = CalculateIV(packet.SerialNumber);
 
         using var aes = Aes.Create();
-        aes.Key = sharedKey;
+        aes.Key = sharedKey!;
         aes.IV = iv;
 
         var encryptor = aes.CreateEncryptor();
@@ -48,13 +49,13 @@ internal class PacketEncryptor : IDisposable
 
     public async Task<Packet> DecryptAsync(Packet encryptedPacket)
     {
-        if (sharedKey == null)
-            throw new InvalidOperationException("Shared key is not set");
+        if (!Ready)
+            throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
 
         var iv = CalculateIV(encryptedPacket.SerialNumber);
 
         using var aes = Aes.Create();
-        aes.Key = sharedKey;
+        aes.Key = sharedKey!;
         aes.IV = iv;
 
         var decryptor = aes.CreateDecryptor();

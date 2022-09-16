@@ -16,19 +16,29 @@ internal class UdpCallAcceptor : ICallAcceptor
 
     public async Task<Stream> AnswerCallAsync(CancellationToken ct = default)
     {
-        return await connectionFactory.ConnectAsync(async myInfo =>
-        {
-            var body = new
+        return await connectionFactory.ConnectAsync(
+            async myInfo =>
             {
-                calleeIPv4Address = myInfo.IPAddress,
-                minPort = myInfo.MinPort,
-                maxPort = myInfo.MaxPort,
-            };
-            Console.WriteLine("Answering call...");
-            var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
-            response.EnsureSuccessStatusCode();
+                var body = new
+                {
+                    calleeIPv4Address = myInfo.IPAddress,
+                    minPort = myInfo.MinPort,
+                    maxPort = myInfo.MaxPort,
+                    publicKey = myInfo.PublicKey,
+                };
+                Console.WriteLine("Answering call...");
+                var response = await httpClient.PostAsJsonAsync(
+                    Endpoint,
+                    body,
+                    cancellationToken: ct
+                );
+                response.EnsureSuccessStatusCode();
 
-            return (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
-        }, ct);
+                return (
+                    await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct)
+                )!;
+            },
+            ct
+        );
     }
 }

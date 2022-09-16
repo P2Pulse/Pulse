@@ -16,21 +16,31 @@ internal class UdpCallInitiator : ICallInitiator
 
     public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
     {
-        return await connectionFactory.ConnectAsync(async myInfo =>
-        {
-            var body = new
+        return await connectionFactory.ConnectAsync(
+            async myInfo =>
             {
-                callerIPv4Address = myInfo.IPAddress,
-                calleeUserName = username,
-                minPort = myInfo.MinPort,
-                maxPort = myInfo.MaxPort
-            };
-            var response = await httpClient.PostAsJsonAsync(Endpoint, body, cancellationToken: ct);
-            response.EnsureSuccessStatusCode();
-        
-            Console.WriteLine("The other person answered the call");
+                var body = new
+                {
+                    callerIPv4Address = myInfo.IPAddress,
+                    calleeUserName = username,
+                    minPort = myInfo.MinPort,
+                    maxPort = myInfo.MaxPort,
+                    publicKey = myInfo.PublicKey
+                };
+                var response = await httpClient.PostAsJsonAsync(
+                    Endpoint,
+                    body,
+                    cancellationToken: ct
+                );
+                response.EnsureSuccessStatusCode();
 
-            return (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
-        }, ct);
+                Console.WriteLine("The other person answered the call");
+
+                return (
+                    await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct)
+                )!;
+            },
+            ct
+        );
     }
 }
