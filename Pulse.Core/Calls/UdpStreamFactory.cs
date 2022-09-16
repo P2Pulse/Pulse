@@ -34,7 +34,7 @@ internal class UdpStreamFactory
             cancellationToken
         );
 
-        packetEncryptor.SetAesIv(connectionInfo.IV!);
+        packetEncryptor.SetAesIV(connectionInfo.IV!);
         packetEncryptor.SetOtherPartyPublicKey(connectionInfo.PublicKey);
 
         connection = new OutOfOrderDropper(connection);

@@ -5,8 +5,8 @@ namespace Pulse.Core.Calls;
 internal class UdpCallInitiator : ICallInitiator
 {
     private const string Endpoint = "/calls";
-    private readonly HttpClient httpClient;
     private readonly UdpStreamFactory connectionFactory;
+    private readonly HttpClient httpClient;
 
     public UdpCallInitiator(HttpClient httpClient, UdpStreamFactory connectionFactory)
     {
@@ -30,15 +30,13 @@ internal class UdpCallInitiator : ICallInitiator
                 var response = await httpClient.PostAsJsonAsync(
                     Endpoint,
                     body,
-                    cancellationToken: ct
+                    ct
                 );
                 response.EnsureSuccessStatusCode();
 
                 Console.WriteLine("The other person answered the call");
 
-                return (
-                    await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct)
-                )!;
+                return (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
             },
             ct
         );

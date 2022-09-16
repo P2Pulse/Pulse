@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using Pulse.Core.Connections;
 
@@ -5,8 +6,8 @@ namespace Pulse.Core;
 
 internal class PacketEncryptor : IDisposable
 {
-    private byte[]? aesIV;
     private readonly ECDiffieHellman ecDiffieHellman;
+    private byte[]? aesIV;
     private byte[]? sharedKey;
 
     public PacketEncryptor()
@@ -16,6 +17,15 @@ internal class PacketEncryptor : IDisposable
 
     public byte[] PublicKey => ecDiffieHellman.PublicKey.ExportSubjectPublicKeyInfo();
 
+    [MemberNotNullWhen(true, nameof(sharedKey))]
+    [MemberNotNullWhen(true, nameof(aesIV))]
+    public bool Ready => sharedKey != null && aesIV != null;
+
+    public void Dispose()
+    {
+        ecDiffieHellman.Dispose();
+    }
+
     public void SetOtherPartyPublicKey(byte[] otherPartyPublicKey)
     {
         using var otherPartyECDH = ECDiffieHellman.Create();
@@ -23,12 +33,10 @@ internal class PacketEncryptor : IDisposable
         sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyECDH.PublicKey);
     }
 
-    public void SetAesIv(byte[] iv)
+    public void SetAesIV(byte[] iv)
     {
         aesIV = iv;
     }
-
-    public bool Ready => sharedKey != null && aesIV != null;
 
     public async Task<Packet> EncryptAsync(Packet packet)
     {
@@ -38,7 +46,7 @@ internal class PacketEncryptor : IDisposable
         var iv = CalculateIV(packet.SerialNumber);
 
         using var aes = Aes.Create();
-        aes.Key = sharedKey!;
+        aes.Key = sharedKey;
         aes.IV = iv;
 
         var encryptor = aes.CreateEncryptor();
@@ -55,7 +63,7 @@ internal class PacketEncryptor : IDisposable
         var iv = CalculateIV(encryptedPacket.SerialNumber);
 
         using var aes = Aes.Create();
-        aes.Key = sharedKey!;
+        aes.Key = sharedKey;
         aes.IV = iv;
 
         var decryptor = aes.CreateDecryptor();
@@ -87,10 +95,5 @@ internal class PacketEncryptor : IDisposable
             .Zip(serialNumberAsBytes, (x, y) => (byte)(x ^ y))
             .Concat(aesIV[sizeof(int)..])
             .ToArray();
-    }
-
-    public void Dispose()
-    {
-        ecDiffieHellman.Dispose();
     }
 }

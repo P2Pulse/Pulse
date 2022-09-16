@@ -5,5 +5,5 @@ internal record ConnectionInfo(
     int MinPort,
     int MaxPort,
     byte[] PublicKey,
-    byte[]? IV
+    byte[]? IV = null
 );
