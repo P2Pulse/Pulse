@@ -7,7 +7,7 @@ namespace Pulse.Core.Calls;
 internal class UdpStreamFactory
 {
     public async Task<Stream> ConnectAsync(
-        Func<ConnectionInfo, Task<ConnectionInfo>> exchangeConnectionInfo,
+        Func<RequestConnectionInfo, Task<ConnectionInfo>> exchangeConnectionInfo,
         CancellationToken cancellationToken = default
     )
     {
@@ -17,18 +17,17 @@ internal class UdpStreamFactory
         );
 
         var packetEncryptor = new PacketEncryptor();
-        var myInfo = new ConnectionInfo(
+        var myInfo = new RequestConnectionInfo(
             myIPv4Address.ToString(),
             min,
             max,
-            packetEncryptor.PublicKey,
-            null
+            packetEncryptor.PublicKey
         );
 
         var connectionInfo = await exchangeConnectionInfo(myInfo);
 
         var connection = await portBruteForcer.EstablishConnectionAsync(
-            IPAddress.Parse(connectionInfo.IPAddress),
+            IPAddress.Parse(connectionInfo.remoteIPAddress),
             connectionInfo.MinPort,
             connectionInfo.MaxPort,
             cancellationToken
