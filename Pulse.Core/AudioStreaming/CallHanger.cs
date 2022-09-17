@@ -86,8 +86,8 @@ internal class CallHanger : IConnection
 
     public async ValueTask DisposeAsync()
     {
-        // send an hangup packet
         cancellationTokenSource.Cancel();
+        // send a hangup packet
         await actualConnection.SendPacketAsync(new Packet(int.MaxValue, new byte[420]), CancellationToken.None);
         await actualConnection.DisposeAsync();
     }
