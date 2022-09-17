@@ -36,7 +36,7 @@ public class CallsController : ControllerBase
     /// Polls for incoming calls
     /// </summary>
     /// <returns>Username of caller if there is an awaiting incoming call, null otherwise</returns>
-    [HttpGet("/incoming")]
+    [HttpGet("incoming")]
     public ActionResult<IncomingCall> PollForIncomingCallAsync()
     {
         var incomingCall = callMatcher.PollForIncomingCall(GetCurrentUsername());
