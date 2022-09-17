@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Pulse.Server.Contracts;
 
 namespace Pulse.Core.Calls;
 
@@ -16,29 +17,17 @@ internal class UdpCallInitiator : ICallInitiator
 
     public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
     {
-        return await connectionFactory.ConnectAsync(
-            async myInfo =>
-            {
-                var body = new
-                {
-                    IPv4Address = myInfo.IPAddress,
-                    calleeUserName = username,
-                    minPort = myInfo.MinPort,
-                    maxPort = myInfo.MaxPort,
-                    publicKey = myInfo.PublicKey
-                };
-                var response = await httpClient.PostAsJsonAsync(
-                    Endpoint,
-                    body,
-                    ct
-                );
-                response.EnsureSuccessStatusCode();
+        var initiationResponse = await httpClient.PostAsJsonAsync(Endpoint, new InitiateCallRequest(username), ct);
+        initiationResponse.EnsureSuccessStatusCode();
+        
+        return await connectionFactory.ConnectAsync(async myInfo =>
+        {
+            var response = await httpClient.PostAsJsonAsync(Endpoint + "/join", myInfo, ct);
+            response.EnsureSuccessStatusCode();
 
-                Console.WriteLine("The other person answered the call");
+            Console.WriteLine("The other person answered the call");
 
-                return (await response.Content.ReadFromJsonAsync<ConnectionInfo>(cancellationToken: ct))!;
-            },
-            ct
-        );
+            return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct))!;
+        }, ct);
     }
 }

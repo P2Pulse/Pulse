@@ -28,5 +28,9 @@
             <_Parameter1>DynamicProxyGenAssembly2</_Parameter1> <!-- We use the value of AssemblyName to declare the value of the attribute -->
         </AssemblyAttribute>
     </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Pulse.Server.Contracts\Pulse.Server.Contracts.csproj" />
+    </ItemGroup>
 
 </Project>

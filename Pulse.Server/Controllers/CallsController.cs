@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Pulse.Server.Contracts;
 using Pulse.Server.Core;
 
 namespace Pulse.Server.Controllers;
@@ -25,36 +26,40 @@ public class CallsController : ControllerBase
     /// <param name="request">Details about the call</param>
     /// <returns>Connection details</returns>
     [HttpPost]
-    public async Task<ActionResult<ConnectionDetails>> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
+    public async Task<IActionResult> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
-        return await callMatcher.InitiateCallAsync(request, User.Identities.First().Name!);
+        await callMatcher.InitiateCallAsync(request, GetCurrentUsername());
+        return NoContent();
     }
-    
+
     /// <summary>
     /// Polls for incoming calls
     /// </summary>
     /// <returns>Username of caller if there is an awaiting incoming call, null otherwise</returns>
-    [HttpGet("/incoming")]
+    [HttpGet("incoming")]
     public ActionResult<IncomingCall> PollForIncomingCallAsync()
     {
-        var userName = User.Identities.First().Name!;
-        var incomingCall = callMatcher.PollForIncomingCall(userName);
+        var incomingCall = callMatcher.PollForIncomingCall(GetCurrentUsername());
         
         if (incomingCall is null)
-            return NotFound();
+            return NotFound(new {Message = "No pending incoming call found for the current user"});
 
         return incomingCall;
     }
     
     /// <summary>
-    /// Accepts an incoming call
+    /// Join a pending call
     /// </summary>
     /// <param name="request">Details about how to connect the call</param>
     /// <returns>Connection details</returns>
-    [HttpPost("accept")]
-    public ActionResult<ConnectionDetails> AcceptIncomingCallAsync([FromBody] AcceptCallRequest request)
+    [HttpPost("join")]
+    public async Task<ActionResult<ConnectionDetails>> JoinPendingCallAsync([FromBody] JoinCallRequest request)
     {
-        var userName = User.Identities.First().Name!;
-        return callMatcher.AcceptIncomingCall(request, userName);
+        return await callMatcher.JoinCallAsync(request, GetCurrentUsername());
+    }
+    
+    private string GetCurrentUsername()
+    {
+        return User.Identity!.Name!;
     }
 }
