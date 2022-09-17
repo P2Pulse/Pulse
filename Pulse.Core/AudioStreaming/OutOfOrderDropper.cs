@@ -57,4 +57,9 @@ internal class OutOfOrderDropper : IConnection
             return actualChannelReader.WaitToReadAsync(cancellationToken);
         }
     }
+
+    public ValueTask DisposeAsync()
+    {
+        return actualConnection.DisposeAsync();
+    }
 }

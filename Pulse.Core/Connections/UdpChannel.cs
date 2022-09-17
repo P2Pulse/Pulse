@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Channels;
 
 namespace Pulse.Core.Connections;
@@ -7,31 +8,31 @@ internal class UdpChannel : IConnection
 {
     private readonly UdpClient udpClient;
     private readonly Channel<Packet> channel;
-
+    private readonly CancellationTokenSource backgroundListening = new();
 
     public UdpChannel(UdpClient udpClient)
     {
         this.udpClient = udpClient;
         channel = Channel.CreateUnbounded<Packet>();
-        _ = ListenAsync();
+        _ = ListenAsync(backgroundListening.Token);
     }
 
-    private async Task ListenAsync()
+    private async Task ListenAsync(CancellationToken cancellationToken)
     {
-        while (true)
+        cancellationToken.Register(() => channel.Writer.Complete());
+        cancellationToken.Register(() => udpClient.Dispose());
+        
+        while (!cancellationToken.IsCancellationRequested)
         {
-            var message = await udpClient.ReceiveAsync();
-            var packet = PacketEncoder.Decode(message.Buffer);
-            await channel.Writer.WriteAsync(packet);
+            var message = await udpClient.ReceiveAsync(cancellationToken);
+            
+            var textualContent = Encoding.ASCII.GetString(message.Buffer);
+            if (textualContent is "Knockout" or "Punch!")
+                continue; // Ignore internal messages that come from the initiation phase
 
-            if (message.Buffer.All(b => b == 0) && message.Buffer.Length is 472)
-            {
-                // TODO: Remove part from here...
-                // TODO: Assert that a packet length is exactly XXX (number we will decide later), this is important.
-                channel.Writer.Complete();
-                udpClient.Dispose();
-                return;
-            }
+            var packet = PacketEncoder.Decode(message.Buffer);
+
+            await channel.Writer.WriteAsync(packet, cancellationToken);
         }
     }
 
@@ -49,5 +50,12 @@ internal class UdpChannel : IConnection
         {
             // ignore
         }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        backgroundListening.Cancel();
+        
+        return ValueTask.CompletedTask;
     }
 }
