@@ -3,80 +3,126 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
+        html {
+            scroll-behavior: smooth;
         }
 
-        form {
-            border: 3px solid #f1f1f1;
-        }
-
-        input[type=text], input[type=password] {
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        button {
-            background-color: #A1A9FE;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #121212; /* fallback for old browsers */
+            overflow-x: hidden;
+            height: 100%;
+            /* code to make all text unselectable */
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -o-user-select: none;
+            user-select: none;
+        }
+
+        /* Disables selector ring */
+        body:not(.user-is-tabbing) button:focus,
+        body:not(.user-is-tabbing) input:focus,
+        body:not(.user-is-tabbing) select:focus,
+        body:not(.user-is-tabbing) textarea:focus {
+            outline: none;
+        }
+
+        h1 {
             color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
+            font-size: 35px;
+            font-weight: 800;
+        }
+
+        .flex-container {
+            width: 100vw;
+            margin-top: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .content-container {
+            width: 500px;
+            height: 350px;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 500px;
+            height: 350px;
+            margin-top: 5px;
+            padding-top: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            background: #1f1f1f;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.199);
+        }
+
+        .subtitle {
+            font-size: 11px;
+            color: rgba(177, 177, 177, 0.3);
+        }
+
+        input {
             border: none;
+            border-bottom: solid rgb(143, 143, 143) 1px;
+            margin-bottom: 30px;
+            background: none;
+            color: rgba(255, 255, 255, 0.555);
+            height: 35px;
+            width: 300px;
+        }
+
+        .submit-btn {
             cursor: pointer;
-            width: 100%;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 2px 2px 7px #4b008270;
+            background: #4b0082;
+            color: rgba(255, 255, 255, 0.8);
+            width: 130px;
+            transition: all 1s;
         }
 
-            button:hover {
-                opacity: 0.8;
-            }
-
-        .cancelbtn {
-            width: auto;
-            padding: 10px 18px;
-            background-color: #f44336;
-        }
-
-        .imgcontainer {
-            text-align: center;
-            margin: 24px 0 12px 0;
-        }
-
-        img.avatar {
-            width: 40%;
-            border-radius: 50%;
-        }
-
-        .container {
-            padding: 16px;
-        }
-
-        span.psw {
-            float: right;
-            padding-top: 16px;
+        .submit-btn:hover {
+            color: rgb(255, 255, 255);
+            box-shadow: none;
         }
     </style>
 </head>
 
-<h2>Login Form</h2>
-
-<div class="imgcontainer">
-    <img src="images\user.png" alt="Avatar" class="avatar">
+<div class="flex-container">
+    <div class="content-container">
+        <div class="form-container">
+            <form action="/action_page.php">
+                <h1>
+                    Login or Register
+                </h1>
+                <br>
+                <br>
+                <span class="subtitle">USERNAME:</span>
+                <br>
+                <input type="text" name="username" value="">
+                <br>
+                <span class="subtitle">PASSWORD:</span>
+                <br>
+                <input type="password" name="password" value="">
+                <br><br>
+                <input type="submit" value="login" class="submit-btn">
+                <input type="submit" value="register" class="submit-btn">
+            </form>
+        </div>
+    </div>
 </div>
-
-<div class="container">
-    <label for="uname"><b>Username</b></label>
-    <input type="text" placeholder="Enter Username" name="uname" required>
-
-    <label for="psw"><b>Password</b></label>
-    <input type="password" placeholder="Enter Password" name="psw" required>
-
-    <button type="submit">Login</button>
-    <label>
-        <input type="checkbox" checked="checked" name="remember"> Remember me
-    </label>
-</div>
-
