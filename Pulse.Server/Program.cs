@@ -36,7 +36,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    
+
     var scheme = new OpenApiSecurityScheme
     {
         Reference = new OpenApiReference
@@ -64,6 +64,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     {
+        options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
         options.Password.RequireDigit = false;
         options.Password.RequireLowercase = false;
         options.Password.RequireNonAlphanumeric = false;
@@ -90,7 +91,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
         RequireAudience = false,
         ValidateAudience = false,
-        ValidAlgorithms = new[] {"HS256"},
+        ValidAlgorithms = new[] { "HS256" },
         NameClaimType = "sub"
     };
     options.RequireHttpsMetadata = false; // TODO: Set up certificates
@@ -104,10 +105,7 @@ builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
+if (app.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
