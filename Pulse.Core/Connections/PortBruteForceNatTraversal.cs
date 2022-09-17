@@ -29,6 +29,7 @@ internal class PortBruteForceNatTraversal
             try
             {
                 var message = await receiver.ReceiveAsync(cancellationToken);
+                Console.WriteLine($"Got punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                 messageRemoteEndPoint = message.RemoteEndPoint;
                 connectionInitiated = true;
             }
