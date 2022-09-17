@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Pulse.Core;
 using Pulse.Core.Calls;
@@ -29,7 +30,11 @@ if (answer == "i")
     var stream = await callInitiator.CallAsync(callee!);
 
     await using var file = File.OpenRead("music.wav");
+    
+    var sw = Stopwatch.StartNew();
     await file.CopyToAsync(stream, bufferSize: 320);
+    sw.Stop();
+    Console.WriteLine($"Sent {file.Length} bytes in {sw.Elapsed.TotalSeconds} seconds");
 }
 else
 {
