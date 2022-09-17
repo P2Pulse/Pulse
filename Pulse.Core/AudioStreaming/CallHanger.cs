@@ -38,10 +38,10 @@ internal class CallHanger : IConnection
             connectionLost = false;
 
             lastPacketReceivedAt = DateTimeOffset.Now;
-            _ = HangIfNoResponseForTooLongAsync(ct);
+            _ = HangUpIfNoResponseForTooLongAsync(ct);
         }
 
-        private async Task HangIfNoResponseForTooLongAsync(CancellationToken ct)
+        private async Task HangUpIfNoResponseForTooLongAsync(CancellationToken ct)
         {
             while (!ct.IsCancellationRequested)
             {
