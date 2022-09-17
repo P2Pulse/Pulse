@@ -1,9 +1,8 @@
-﻿namespace Pulse.Server.Core;
+﻿namespace Pulse.Server.Contracts;
 
 public record ConnectionDetails(
-    string RemoteIPAddress,
+    string IPAddress,
     int MinPort,
     int MaxPort,
-    string CallerUsername,
     byte[] PublicKey,
     byte[] IV);

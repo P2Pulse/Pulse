@@ -26,4 +26,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Pulse.Server.Contracts\Pulse.Server.Contracts.csproj" />
+    </ItemGroup>
+
 </Project>
