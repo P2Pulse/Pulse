@@ -39,6 +39,7 @@ internal class UdpStreamFactory
 
         connection = new OutOfOrderDropper(connection);
         connection = new EncryptedConnection(connection, packetEncryptor);
+        connection = new CallHanger(connection);
 
         return new PacketStream(connection);
     }
