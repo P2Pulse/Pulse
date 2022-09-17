@@ -28,9 +28,9 @@ internal class PacketEncryptor : IDisposable
 
     public void SetOtherPartyPublicKey(byte[] otherPartyPublicKey)
     {
-        using var otherPartyECDH = ECDiffieHellman.Create();
-        otherPartyECDH.ImportSubjectPublicKeyInfo(otherPartyPublicKey, out _);
-        sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyECDH.PublicKey);
+        using var otherPartyEcdh = ECDiffieHellman.Create();
+        otherPartyEcdh.ImportSubjectPublicKeyInfo(otherPartyPublicKey, out _);
+        sharedKey = ecDiffieHellman.DeriveKeyMaterial(otherPartyEcdh.PublicKey);
     }
 
     public void SetAesIV(byte[] iv)
@@ -43,7 +43,7 @@ internal class PacketEncryptor : IDisposable
         if (!Ready)
             throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
 
-        var iv = CalculateIV(packet.SerialNumber);
+        var iv = CalculateIV(aesIV, packet.SerialNumber);
 
         using var aes = Aes.Create();
         aes.Key = sharedKey;
@@ -60,7 +60,7 @@ internal class PacketEncryptor : IDisposable
         if (!Ready)
             throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
 
-        var iv = CalculateIV(encryptedPacket.SerialNumber);
+        var iv = CalculateIV(aesIV, encryptedPacket.SerialNumber);
 
         using var aes = Aes.Create();
         aes.Key = sharedKey;
@@ -88,12 +88,12 @@ internal class PacketEncryptor : IDisposable
         return dataStream;
     }
 
-    private byte[] CalculateIV(int serialNumber)
+    private static byte[] CalculateIV(byte[] iv, int serialNumber)
     {
         var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
-        return aesIV
+        return iv
             .Zip(serialNumberAsBytes, (x, y) => (byte)(x ^ y))
-            .Concat(aesIV[sizeof(int)..])
+            .Concat(iv[sizeof(int)..])
             .ToArray();
     }
 }

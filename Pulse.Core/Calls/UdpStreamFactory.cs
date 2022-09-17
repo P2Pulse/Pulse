@@ -1,13 +1,14 @@
 ﻿using System.Net;
 using Pulse.Core.AudioStreaming;
 using Pulse.Core.Connections;
+using Pulse.Server.Contracts;
 
 namespace Pulse.Core.Calls;
 
 internal class UdpStreamFactory
 {
     public async Task<Stream> ConnectAsync(
-        Func<RequestConnectionInfo, Task<ConnectionInfo>> exchangeConnectionInfo,
+        Func<JoinCallRequest, Task<ConnectionDetails>> exchangeConnectionInfo,
         CancellationToken cancellationToken = default
     )
     {
@@ -17,17 +18,17 @@ internal class UdpStreamFactory
         );
 
         var packetEncryptor = new PacketEncryptor();
-        var myInfo = new RequestConnectionInfo(
-            myIPv4Address.ToString(),
+        var myInfo = new JoinCallRequest(
             min,
             max,
+            myIPv4Address.ToString(),
             packetEncryptor.PublicKey
         );
 
         var connectionInfo = await exchangeConnectionInfo(myInfo);
 
         var connection = await portBruteForcer.EstablishConnectionAsync(
-            IPAddress.Parse(connectionInfo.remoteIPAddress),
+            IPAddress.Parse(connectionInfo.IPAddress),
             connectionInfo.MinPort,
             connectionInfo.MaxPort,
             cancellationToken
