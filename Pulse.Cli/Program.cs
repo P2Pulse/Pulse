@@ -3,21 +3,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Pulse.Core;
 using Pulse.Core.Calls;
 
-Console.Write("Initiator or Receiver? i/r");
-
-var answer = Console.ReadLine();
-
 var services = new ServiceCollection();
 const string serverHttpClient = "Pulse.Server";
 services.AddHttpClient(serverHttpClient, client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5006");
+    client.BaseAddress = new Uri("http://ec2-3-65-21-97.eu-central-1.compute.amazonaws.com:5000");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "{MY_TOKEN}");
 });
 services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
 services.AddPulse();
 
 var serviceProvider = services.BuildServiceProvider();
+
+Console.Write("Initiator or Receiver? i/r");
+
+var answer = Console.ReadLine();
 
 if (answer == "i")
 {
