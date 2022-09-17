@@ -43,7 +43,7 @@ internal class OutOfOrderDropper : IConnection
                     return false;
                 if (!firstIteration)
                     Console.WriteLine("Dropped");
-                else
+                else  // TODO: remove me!
                     firstIteration = false;
             } while (packet.SerialNumber <= lastProcessedPacket);
 
