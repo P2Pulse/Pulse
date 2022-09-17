@@ -53,13 +53,13 @@ internal class PortBruteForceNatTraversal
                 {
                     sender.Dispose();
                     await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                    var datagram = Encoding.ASCII.GetBytes("Success!");
+                    var datagram = Encoding.ASCII.GetBytes("Knockout");
                     await receiver.SendAsync(datagram, cancellationToken);
                     return new UdpChannel(receiver);
                 }
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
-                var message = Encoding.ASCII.GetBytes($"Hey from {port} sent to {destinationPort}");
+                var message = Encoding.ASCII.GetBytes("Punch!");
                 await sender.SendAsync(message, endpoint, cancellationToken);
                 if (destinationPort % 5 is 0)
                     await Task.Delay(5, cancellationToken);
