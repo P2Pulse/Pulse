@@ -57,4 +57,9 @@ internal class EncryptedConnection : IConnection
             return actualChannelReader.WaitToReadAsync(cancellationToken);
         }
     }
+
+    public ValueTask DisposeAsync()
+    {
+        return actualConnection.DisposeAsync();
+    }
 }

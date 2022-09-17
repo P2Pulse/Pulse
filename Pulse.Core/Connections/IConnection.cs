@@ -2,7 +2,7 @@
 
 namespace Pulse.Core.Connections;
 
-internal interface IConnection
+internal interface IConnection : IAsyncDisposable
 {
     ChannelReader<Packet> IncomingAudio { get; }
     Task SendPacketAsync(Packet packet, CancellationToken cancellationToken);
