@@ -26,9 +26,9 @@ public class CallsController : ControllerBase
     /// <param name="request">Details about the call</param>
     /// <returns>Connection details</returns>
     [HttpPost]
-    public IActionResult InitiateNewCall([FromBody] InitiateCallRequest request)
+    public async Task<IActionResult> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
-        callMatcher.InitiateCall(request, GetCurrentUsername());
+        await callMatcher.InitiateCallAsync(request, GetCurrentUsername());
         return NoContent();
     }
 

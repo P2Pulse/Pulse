@@ -7,17 +7,19 @@ namespace Pulse.Server.Core;
 public class InMemoryCallMatcher
 {
     private readonly ConcurrentDictionary<string, PendingConnection> pendingConnections = new();
-    private readonly ConcurrentDictionary<string, byte[]> initializationVectors = new();
+    private readonly ConcurrentDictionary<string, byte[]> initializationVectors = new(); // TODO: IVs are never deleted so this only grows over time
 
-    public void InitiateCall(InitiateCallRequest request, string callerUsername)
+    public Task InitiateCallAsync(InitiateCallRequest request, string callerUsername)
     {
         // TODO: If the caller is already in a call/there is a call waiting for him, return an error/handle it nicely.
         // TODO: If A is calling B and B didn't answer yet, C can call B and fuck A's call.
         // TODO: Add a timeout to calls on the server side.
-        pendingConnections[callerUsername] = new PendingConnection(
-            request.CalleeUserName, new TaskCompletionSource<ConnectionDetails>());
+        var myTaskCompletionSource = new TaskCompletionSource<ConnectionDetails>();
+        pendingConnections[callerUsername] = new PendingConnection(request.CalleeUserName, myTaskCompletionSource);
         pendingConnections[request.CalleeUserName] = new PendingConnection(
             callerUsername, new TaskCompletionSource<ConnectionDetails>());
+
+        return myTaskCompletionSource.Task;
     }
 
     public IncomingCall? PollForIncomingCall(string userName)
