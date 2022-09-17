@@ -7,10 +7,13 @@ namespace Pulse.Core.AudioStreaming;
 internal class CallHanger : IConnection
 {
     private readonly IConnection actualConnection;
+    private readonly CancellationTokenSource cancellationTokenSource;
+
 
     public CallHanger(IConnection actualConnection)
     {
-        IncomingAudio = new CallHangerChannelReader(actualConnection.IncomingAudio, this);
+        cancellationTokenSource = new CancellationTokenSource();
+        IncomingAudio = new CallHangerChannelReader(actualConnection.IncomingAudio, this, cancellationTokenSource.Token);
         this.actualConnection = actualConnection;
     }
 
@@ -28,19 +31,19 @@ internal class CallHanger : IConnection
         private DateTimeOffset lastPacketReceivedAt;
         private bool connectionLost;
 
-        public CallHangerChannelReader(ChannelReader<Packet> actualChannelReader, CallHanger callHanger)
+        public CallHangerChannelReader(ChannelReader<Packet> actualChannelReader, CallHanger callHanger, CancellationToken ct)
         {
             this.actualChannelReader = actualChannelReader;
             this.callHanger = callHanger;
             connectionLost = false;
 
             lastPacketReceivedAt = DateTimeOffset.Now;
-            _ = HangIfNoResponseForTooLongAsync();
+            _ = HangIfNoResponseForTooLongAsync(ct);
         }
 
-        private async Task HangIfNoResponseForTooLongAsync()
+        private async Task HangIfNoResponseForTooLongAsync(CancellationToken ct)
         {
-            while (true)
+            while (!ct.IsCancellationRequested)
             {
                 if (DateTimeOffset.Now - lastPacketReceivedAt > TimeSpan.FromSeconds(5))
                 {
@@ -50,7 +53,7 @@ internal class CallHanger : IConnection
                     break;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromSeconds(1), ct);
             }
         }
 
@@ -84,6 +87,7 @@ internal class CallHanger : IConnection
     public async ValueTask DisposeAsync()
     {
         // send an hangup packet
+        cancellationTokenSource.Cancel();
         await actualConnection.SendPacketAsync(new Packet(int.MaxValue, new byte[420]), CancellationToken.None);
         await actualConnection.DisposeAsync();
     }
