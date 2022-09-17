@@ -8,7 +8,8 @@ const string serverHttpClient = "Pulse.Server";
 services.AddHttpClient(serverHttpClient, client =>
 {
     client.BaseAddress = new Uri("http://ec2-3-65-21-97.eu-central-1.compute.amazonaws.com:5000");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "{MY_TOKEN}");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzQxNDg5NywiZXhwIjoxNjY0MDE5Njk3LCJpYXQiOjE2NjM0MTQ4OTd9.QEbafJDu3GVVaefZdtZEKIWCaS0-OLgsaGTz05tNSAE");
 });
 services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
 services.AddPulse();
@@ -28,7 +29,7 @@ if (answer == "i")
     var stream = await callInitiator.CallAsync(callee!);
 
     await using var file = File.OpenRead("music.wav");
-    await file.CopyToAsync(stream);
+    await file.CopyToAsync(stream, bufferSize: 320);
 }
 else
 {
