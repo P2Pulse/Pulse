@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using Pulse.Server.Contracts;
@@ -37,7 +38,10 @@ public class IncomingCallPoller
                 var audioStream = await callAcceptor.AnswerCallAsync(ct);
                 // write stream to file
                 await using var fileStream = File.Create("output.wav");
-                await audioStream.CopyToAsync(fileStream, ct);
+                var receive = audioStream.CopyToAsync(fileStream, ct);
+                await using var file = File.OpenRead("music.wav");
+                var send = file.CopyToAsync(audioStream, bufferSize: 320, ct);
+                await Task.WhenAll(send, receive);
                 Console.WriteLine("Call hanged");
             }
             catch (Exception e)
