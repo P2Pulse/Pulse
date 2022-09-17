@@ -8,7 +8,7 @@ var services = new ServiceCollection();
 const string serverHttpClient = "Pulse.Server";
 services.AddHttpClient(serverHttpClient, client =>
 {
-    client.BaseAddress = new Uri("http://ec2-3-65-21-97.eu-central-1.compute.amazonaws.com:5000");
+    client.BaseAddress = new Uri("https://pulse.gurgaller.com");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzQxNDg5NywiZXhwIjoxNjY0MDE5Njk3LCJpYXQiOjE2NjM0MTQ4OTd9.QEbafJDu3GVVaefZdtZEKIWCaS0-OLgsaGTz05tNSAE");
 });
