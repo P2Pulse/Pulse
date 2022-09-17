@@ -44,7 +44,7 @@ internal class CallHanger : IConnection
             {
                 if (DateTimeOffset.Now - lastPacketReceivedAt > TimeSpan.FromSeconds(5))
                 {
-                    Console.WriteLine("Assuming connection lost, hanging up (without notifying the other side).");
+                    Console.WriteLine("Assuming connection lost, hanging up.");
                     connectionLost = true;
                     await callHanger.DisposeAsync();
                     break;
