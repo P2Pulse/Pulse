@@ -7,16 +7,6 @@ Console.Write("Initiator or Receiver? i/r");
 
 var answer = Console.ReadLine();
 
-using var httpClient = new HttpClient
-{
-    BaseAddress = new Uri("http://ec2-3-65-21-97.eu-central-1.compute.amazonaws.com:5000"),
-    DefaultRequestHeaders =
-    {
-        Authorization = new AuthenticationHeaderValue("Bearer",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJndXIiLCJuYmYiOjE2NjI3Mzc0NzcsImV4cCI6MTY2MzM0MjI3NywiaWF0IjoxNjYyNzM3NDc3fQ.uqXbNJsGZDyb69qNEInK7KBs1muBcvJENll6O_Pdrjs")
-    }
-};
-
 var services = new ServiceCollection();
 const string serverHttpClient = "Pulse.Server";
 services.AddHttpClient(serverHttpClient, client =>
