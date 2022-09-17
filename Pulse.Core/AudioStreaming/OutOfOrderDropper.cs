@@ -34,16 +34,21 @@ internal class OutOfOrderDropper : IConnection
             this.actualChannelReader = actualChannelReader;
         }
 
-        public override bool TryRead([MaybeNullWhen(returnValue: false)]out Packet packet)
+        public override bool TryRead([MaybeNullWhen(returnValue: false)] out Packet packet)
         {
+            var firstIteration = true;
             do
             {
                 if (!actualChannelReader.TryRead(out packet))
                     return false;
+                if (!firstIteration)
+                    Console.WriteLine("Dropped");
+                else
+                    firstIteration = false;
             } while (packet.SerialNumber <= lastProcessedPacket);
 
             lastProcessedPacket = packet.SerialNumber;
-            
+
             return true;
         }
 
