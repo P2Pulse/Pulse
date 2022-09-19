@@ -21,7 +21,7 @@
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
 
-data/
+/data/
 Logs/
 
 *.suo
