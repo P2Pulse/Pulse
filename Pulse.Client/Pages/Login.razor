@@ -1,0 +1,11 @@
+<h3>Login</h3>
+
+@code {
+    private string token;
+
+    private async void SetJwtToken()
+    {
+        await SecureStorage.Default.SetAsync("jwt_login_token", token); // PROBLEM TODO: Remove this directory from android backups.
+    }
+
+}
