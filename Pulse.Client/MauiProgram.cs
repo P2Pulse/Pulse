@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components.WebView.Maui;
+using MudBlazor.Services;
 using Pulse.Client.Data;
+using Pulse.Core;
+using Pulse.Core.Calls;
 
 namespace Pulse.Client
 {
@@ -20,7 +23,9 @@ namespace Pulse.Client
 		builder.Services.AddBlazorWebViewDeveloperTools();
 #endif
 
-            builder.Services.AddSingleton<WeatherForecastService>();
+            builder.Services.AddSingleton<WeatherForecastService>();  // TODO remove this.
+            builder.Services.AddMudServices();
+            builder.Services.AddPulse();
 
             return builder.Build();
         }

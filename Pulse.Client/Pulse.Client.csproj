@@ -48,4 +48,12 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MudBlazor" Version="6.0.15" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Pulse.Core\Pulse.Core.csproj" />
+    </ItemGroup>
+
 </Project>
