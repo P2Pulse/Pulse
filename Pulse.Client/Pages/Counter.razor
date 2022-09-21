@@ -10,7 +10,7 @@
     private async Task Play()
     {
         await using var fileStream = await FileSystem.OpenAppPackageFileAsync("Audio/music.wav");
-        var audioTrack = new AudioTrack(Stream.Music, 16000, ChannelOut.Mono, Encoding.Pcm16bit, 320, AudioTrackMode.Stream);
+        var audioTrack = new AudioTrack(Stream.Music, 16_000, ChannelOut.Mono, Encoding.Pcm16bit, 320, AudioTrackMode.Stream);
         audioTrack.Play();
 
         var buffer = new byte[320];
