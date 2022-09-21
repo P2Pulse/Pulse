@@ -1,0 +1,19 @@
+@page "/Dail"
+@using Pulse.Core.Calls
+@inject ICallInitiator CallInitiator
+
+<h3>Dial</h3>
+<MudTextField @bind-Value="username" Label="Usernmae" HelperText="Who do you want to call?" Variant="Variant.Outlined"
+              Required="true" RequiredError="User name is required!"/>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call">Default</MudButton>
+
+
+@code {
+    private string? username = null;
+
+    private async void Call()
+    {
+        var stream = await CallInitiator.CallAsync(username);
+    }
+
+}
