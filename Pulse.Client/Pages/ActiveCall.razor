@@ -1,0 +1,26 @@
+﻿@page "/ActiveCall"
+@using Pulse.Client.Calls
+@using Pulse.Client.Audio
+@inject CurrentCallAccessor CallAccessor
+@inject Microphone Microphone
+@inject Speaker Speaker
+
+<h3>@CurrentCall.OtherUser</h3>
+
+@if (!CurrentCall.Connection.IsCompleted)
+{
+    <p>Connecting...</p>
+}
+
+@code {
+    private Call CurrentCall => CallAccessor.CurrentCall!;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await using var audioStream = await CurrentCall.Connection;
+        var microphoneRecording = new CancellationTokenSource();
+        _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
+        await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
+        microphoneRecording.Cancel();
+    }
+}

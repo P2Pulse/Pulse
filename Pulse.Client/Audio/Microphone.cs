@@ -6,11 +6,15 @@ namespace Pulse.Client.Audio;
 
 public class Microphone
 {
-    private async void RecordAsync(Stream streamToWriteTo, CancellationToken ct)
+    public async Task RecordAsync(Stream streamToWriteTo, CancellationToken ct)
     {
         var buffer = new byte[320];
-        var recorder = new AudioRecord(AudioSource.Mic, 16_000, ChannelIn.Mono, Encoding.Pcm16bit, buffer.Length);
+        
+        var recorder = new AudioRecord(AudioSource.Mic, sampleRateInHz: 16_000, ChannelIn.Mono, Encoding.Pcm16bit, 
+            buffer.Length);
+        
         recorder.StartRecording();
+        
         while (!ct.IsCancellationRequested)
         {
             var read = await recorder.ReadAsync(buffer, 0, buffer.Length);

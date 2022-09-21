@@ -1,19 +1,22 @@
-@page "/Dail"
+@page "/Dial"
 @using Pulse.Core.Calls
+@using Pulse.Client.Calls
 @inject ICallInitiator CallInitiator
+@inject CurrentCallAccessor CallAccessor
+@inject NavigationManager NavManager
 
 <h3>Dial</h3>
-<MudTextField @bind-Value="username" Label="Usernmae" HelperText="Who do you want to call?" Variant="Variant.Outlined"
+<MudTextField @bind-Value="username" Label="Username" HelperText="Who do you want to call?" Variant="Variant.Outlined"
               Required="true" RequiredError="User name is required!"/>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call">Default</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call" Disabled="@(username is null)">Call</MudButton>
 
 
 @code {
-    private string? username = null;
+    private string? username;
 
-    private async void Call()
+    private void Call()
     {
-        var stream = await CallInitiator.CallAsync(username);
+        CallAccessor.CurrentCall = new Call(username!, CallInitiator.CallAsync(username!));
+        NavManager.NavigateTo("/ActiveCall");
     }
-
 }
