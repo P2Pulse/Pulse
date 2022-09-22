@@ -1,6 +1,18 @@
 <h3>Login</h3>
+<MudPaper Class="pa-16 ma-2">
+
+    <MudImage Src="images/mony.jpg" Alt="Mony the dog" Elevation="25" Class="rounded-lg" />
+    <MudText Typo="Typo.h6" Class="px-4">Pulse</MudText>
+    <MudTextField @bind-Value="TextValue" Label="username" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+    <MudTextField @bind-Value="TextValue" Label="password" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary">Login</MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Secondary">Register</MudButton>
+</MudPaper>
+
 
 @code {
+    public string TextValue { get; set; }
+    
     private string token;
 
     private async void SetJwtToken()
