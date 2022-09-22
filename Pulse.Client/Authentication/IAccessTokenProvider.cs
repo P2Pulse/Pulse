@@ -5,7 +5,7 @@ public interface IAccessTokenProvider
     string? AccessToken { get; }
 }
 
-class HardCodedAccessTokenProvider : IAccessTokenProvider
+internal class HardCodedAccessTokenProvider : IAccessTokenProvider
 {
     public string? AccessToken => "GHJFGIHJGFH";
 }
