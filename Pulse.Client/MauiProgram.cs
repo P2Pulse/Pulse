@@ -44,8 +44,6 @@ public static class MauiProgram
             .AddTransient<Microphone>()
             .AddTransient<Speaker>();
 
-        var mauiApp = builder.Build();
-        _ = mauiApp.Services.GetRequiredService<IncomingCallPoller>();
-        return mauiApp;
+        return builder.Build();
     }
 }
