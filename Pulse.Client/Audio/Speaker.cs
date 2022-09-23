@@ -16,7 +16,7 @@ public class Speaker
         audioTrack.Play();
 
         int bytesRead;
-        while ((bytesRead = stream.Read(buffer)) != 0) 
+        while ((bytesRead = await stream.ReadAsync(buffer)) != 0) 
             await audioTrack.WriteAsync(buffer, 0, bytesRead);
     }
 }
