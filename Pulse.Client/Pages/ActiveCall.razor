@@ -12,15 +12,28 @@
     <p>Connecting...</p>
 }
 
+@if (error is not null)
+{
+    <p>@error</p>
+}
+
 @code {
     private Call CurrentCall => CallAccessor.CurrentCall!;
+    private string? error;
     
     protected override async Task OnInitializedAsync()
     {
-        await using var audioStream = await CurrentCall.Connection;
-        var microphoneRecording = new CancellationTokenSource();
-        _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
-        await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
-        microphoneRecording.Cancel();
+        try
+        {
+            await using var audioStream = await CurrentCall.Connection;
+            var microphoneRecording = new CancellationTokenSource();
+            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
+            await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
+            microphoneRecording.Cancel();
+        }
+        catch (Exception e)
+        {
+            error = e.ToString();
+        }
     }
 }
