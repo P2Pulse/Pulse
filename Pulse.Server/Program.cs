@@ -105,7 +105,9 @@ builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
+var insecureErrorMessageExposure = true; // TODO: remove this
+if (app.Environment.IsDevelopment() || insecureErrorMessageExposure) 
+    app.UseDeveloperExceptionPage();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
