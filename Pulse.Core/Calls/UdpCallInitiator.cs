@@ -18,12 +18,26 @@ internal class UdpCallInitiator : ICallInitiator
     public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
     {
         var initiationResponse = await httpClient.PostAsJsonAsync(Endpoint, new InitiateCallRequest(username), ct);
-        initiationResponse.EnsureSuccessStatusCode();
-        
+        try
+        {
+            initiationResponse.EnsureSuccessStatusCode();
+        }
+        catch (Exception e)
+        {
+            throw new Exception(await initiationResponse.Content.ReadAsStringAsync(ct), e);
+        }
+
         return await connectionFactory.ConnectAsync(async myInfo =>
         {
             var response = await httpClient.PostAsJsonAsync(Endpoint + "/join", myInfo, ct);
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(await response.Content.ReadAsStringAsync(ct), e);
+            }
 
             Console.WriteLine("The other person answered the call");
 
