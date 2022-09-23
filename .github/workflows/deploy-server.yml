@@ -21,7 +21,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet publish --no-restore --configuration Release
+      run: dotnet publish --no-restore --configuration Release --framework net6.0
     - name: Copy files to server
       uses: easingthemes/ssh-deploy@v2.2.11
       env:
