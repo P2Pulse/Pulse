@@ -15,16 +15,17 @@ public class InMemoryCallMatcher
         // TODO: If A is calling B and B didn't answer yet, C can call B and fuck A's call.
         // TODO: Add a timeout to calls on the server side.
         var myTaskCompletionSource = new TaskCompletionSource<ConnectionDetails>();
-        pendingConnections[callerUsername] = new PendingConnection(request.CalleeUserName, myTaskCompletionSource);
+        pendingConnections[callerUsername] = new PendingConnection(IsIncoming: false, request.CalleeUserName, 
+            myTaskCompletionSource);
         pendingConnections[request.CalleeUserName] = new PendingConnection(
-            callerUsername, new TaskCompletionSource<ConnectionDetails>());
+            IsIncoming: true, callerUsername, new TaskCompletionSource<ConnectionDetails>());
 
         return myTaskCompletionSource.Task;
     }
 
     public IncomingCall? PollForIncomingCall(string userName)
     {
-        return pendingConnections.TryGetValue(userName, out var pendingConnection)
+        return pendingConnections.TryGetValue(userName, out var pendingConnection) && pendingConnection.IsIncoming
             ? new IncomingCall(pendingConnection.OtherUsername)
             : null;
     }
@@ -56,5 +57,5 @@ public class InMemoryCallMatcher
         });
     }
 
-    private record PendingConnection(string OtherUsername, TaskCompletionSource<ConnectionDetails> ConnectionDetails);
+    private record PendingConnection(bool IsIncoming, string OtherUsername, TaskCompletionSource<ConnectionDetails> ConnectionDetails);
 }
