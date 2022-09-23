@@ -99,8 +99,8 @@ internal class PortBruteForceNatTraversal
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
         var min = ports.Min();
-        min = Math.Max(min - 100, 1);
-        max = Math.Min(max + 100, ushort.MaxValue);
+        min = Math.Max(min - 250, 1);
+        max = Math.Min(max + 250, ushort.MaxValue);
         var myIp4Address = responses.First().Address;
         return (myIp4Address, min, max);
     }
