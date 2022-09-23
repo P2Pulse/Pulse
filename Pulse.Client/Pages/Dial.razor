@@ -8,7 +8,7 @@
 <h3>Dial</h3>
 <MudTextField @bind-Value="username" Label="Username" HelperText="Who do you want to call?" Variant="Variant.Outlined"
               Required="true" RequiredError="User name is required!"/>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call" Disabled="@(username is null)">Call</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call">Call</MudButton>
 
 
 @code {
