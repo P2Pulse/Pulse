@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using MudBlazor.Services;
+using Pulse.Client.Audio;
 using Pulse.Client.Authentication;
 using Pulse.Client.Calls;
 using Pulse.Client.Data;
@@ -38,6 +39,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<CurrentCallAccessor>();
 
         builder.Services.AddSingleton<IncomingCallPoller>();
+
+        builder.Services
+            .AddTransient<Microphone>()
+            .AddTransient<Speaker>();
 
         var mauiApp = builder.Build();
         _ = mauiApp.Services.GetRequiredService<IncomingCallPoller>();
