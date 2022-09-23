@@ -29,7 +29,7 @@ internal class PortBruteForceNatTraversal
             try
             {
                 var message = await receiver.ReceiveAsync(cancellationToken);
-                Console.WriteLine($"Got punching message: {Encoding.ASCII.GetString(message.Buffer)}");
+                Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                 messageRemoteEndPoint = message.RemoteEndPoint;
                 connectionInitiated = true;
             }
@@ -46,8 +46,13 @@ internal class PortBruteForceNatTraversal
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
         Console.WriteLine("Starting to punch holes");
 
+        short ttl = 4;
         while (true)
         {
+            sender.Ttl = ttl;
+            ttl++;
+            
+            var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
                 if (connectionInitiated)
@@ -60,12 +65,11 @@ internal class PortBruteForceNatTraversal
                 }
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
-                var message = Encoding.ASCII.GetBytes("Punch!");
                 await sender.SendAsync(message, endpoint, cancellationToken);
                 if (destinationPort % 5 is 0)
                     await Task.Delay(5, cancellationToken);
             }
-
+            
             Console.WriteLine("loop");
         }
     }
@@ -99,8 +103,8 @@ internal class PortBruteForceNatTraversal
         var ports = responses.Select(r => r.Port).ToList();
         var max = ports.Max();
         var min = ports.Min();
-        min = Math.Max(min - 250, 1);
-        max = Math.Min(max + 250, ushort.MaxValue);
+        min = Math.Max(min - 75, 1);
+        max = Math.Min(max + 75, ushort.MaxValue);
         var myIp4Address = responses.First().Address;
         return (myIp4Address, min, max);
     }
