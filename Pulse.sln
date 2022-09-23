@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Core.Tests", "Pulse.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Server.Contracts", "Pulse.Server.Contracts\Pulse.Server.Contracts.csproj", "{A0E106A6-95A3-45F5-915D-D99D0AA132C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Client", "Pulse.Client\Pulse.Client.csproj", "{F3C8F86F-6396-421A-84CE-125DC4703B45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Client", "Pulse.Client\Pulse.Client.csproj", "{F3C8F86F-6396-421A-84CE-125DC4703B45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

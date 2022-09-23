@@ -1,0 +1,19 @@
+﻿<h3>Ringing</h3>
+
+<MudPaper Class="pa-16 ma-2">
+    <MudText Typo="Typo.h2">Alice32</MudText>
+    <br><br>
+    <MudText Typo="Typo.h6">Ringing</MudText>
+    <br>
+    <MudText Typo="Typo.h6">Connecting</MudText>
+    <br>
+    <MudText Typo="Typo.h6">Connected (seconds)</MudText>
+    <MudTextField @bind-Value="TextValue" Label="username to call" Variant="Variant.Text"></MudTextField>
+    <br><br><br><br>
+    <MudImage Src="images/end-call-icon.png" Alt="Mony the dog" Elevation="25" Class="rounded-lg" />
+</MudPaper>
+
+
+@code {
+    public string TextValue { get; set; }
+}

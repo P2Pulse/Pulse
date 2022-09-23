@@ -1,0 +1,14 @@
+﻿<h3>Call_user</h3>
+
+
+<MudPaper Class="pa-16 ma-2">
+    <MudText Typo="Typo.h2">Hello Bob</MudText>
+    <br><br>
+    <MudText Typo="Typo.h4">Who would you like to call?</MudText>
+    <MudTextField @bind-Value="TextValue" Label="username to call" Variant="Variant.Text"></MudTextField>
+</MudPaper>
+
+
+@code {
+    public string TextValue { get; set; }
+}
