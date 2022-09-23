@@ -5,8 +5,8 @@
 @inject Microphone Microphone
 @inject Speaker Speaker
 
+<MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
 <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
-<MudAvatar Color="Color.Primary">@CurrentCall.OtherUser[0]</MudAvatar>
 
 @if (!CurrentCall.Connection.IsCompleted)
 {
