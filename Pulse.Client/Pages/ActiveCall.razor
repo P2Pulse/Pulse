@@ -5,7 +5,8 @@
 @inject Microphone Microphone
 @inject Speaker Speaker
 
-<h3>@CurrentCall.OtherUser</h3>
+<MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
+<MudAvatar Color="Color.Primary">@CurrentCall.OtherUser[0]</MudAvatar>
 
 @if (!CurrentCall.Connection.IsCompleted)
 {
