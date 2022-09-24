@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using STUN;
@@ -51,8 +52,6 @@ internal class PortBruteForceNatTraversal
         while (true)
         {
             sender.Ttl = ttl;
-            ttl++;
-            ttl++;
 
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
@@ -61,18 +60,29 @@ internal class PortBruteForceNatTraversal
                 {
                     sender.Dispose();
                     await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                    var datagram = Encoding.ASCII.GetBytes("Knockout");
-                    await receiver.SendAsync(datagram, cancellationToken);
+                    for (var i = 0; i < 20; i++)
+                    {
+                        var datagram = Encoding.ASCII.GetBytes("Knockout");
+                        await receiver.SendAsync(datagram, cancellationToken);
+                        Sleep(TimeSpan.FromMilliseconds(0.5));
+                    }
+                    
                     return new UdpChannel(receiver);
                 }
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 await sender.SendAsync(message, endpoint, cancellationToken);
-                if (destinationPort % 4 is 0 || destinationPort % 5 is 0)
-                    await Task.Delay(5, cancellationToken);
+                Sleep(TimeSpan.FromMilliseconds(0.2));
             }
             Console.WriteLine("loop");
         }
+    }
+
+    private static void Sleep(TimeSpan duration)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (stopwatch.Elapsed < duration)
+            ;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(Socket socket, string hostName,
