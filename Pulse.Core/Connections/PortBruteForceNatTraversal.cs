@@ -51,6 +51,8 @@ internal class PortBruteForceNatTraversal
         {
             sender.Ttl = ttl;
             ttl++;
+            ttl++;
+            ttl++;
             
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
