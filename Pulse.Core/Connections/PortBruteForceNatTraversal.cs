@@ -122,6 +122,7 @@ internal class PortBruteForceNatTraversal
                 return result.PublicEndPoint;
             await Task.Delay(50, cancellationToken);
             Console.WriteLine(4);
+            Console.WriteLine(hostName);
         }
     }
 
@@ -129,8 +130,8 @@ internal class PortBruteForceNatTraversal
         CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Getting ports");
-        var s1 = "stun.schlund.de";
-        var s2 = "stun.jumblo.com";
+        var s1 = "stun.nventure.com";
+        var s2 = "stun.voxox.com";
 
         var random = new Random();
         var queriesAmount = random.Next(2, 4);
