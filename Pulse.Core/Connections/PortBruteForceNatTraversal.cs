@@ -26,7 +26,14 @@ internal class PortBruteForceNatTraversal
             }
             else
             {
-                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
+                try
+                {
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
+                }
+                catch (SocketException)
+                {
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));  // TODO: Fix this
+                }
             }
 
             return udpClient;
