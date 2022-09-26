@@ -32,7 +32,7 @@ internal class PortBruteForceNatTraversal
                 }
                 catch (SocketException)
                 {
-                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));  // TODO: Fix this
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
                 }
             }
 
@@ -83,7 +83,7 @@ internal class PortBruteForceNatTraversal
         Console.WriteLine("Starting to punch holes");
 
         var message = Encoding.ASCII.GetBytes("Punch!");
-        for (var i = 0; i < 10; i++)
+        for (var i = minPort - 75; i <= minPort + 75; i += 75)
         {
             foreach (var sender in senders)
             {
@@ -101,7 +101,7 @@ internal class PortBruteForceNatTraversal
                     return new UdpChannel(selectedReceiver);
                 }
 
-                var endpoint = new IPEndPoint(destination, minPort + i);
+                var endpoint = new IPEndPoint(destination, minPort);
                 await sender.SendAsync(message, endpoint, cancellationToken);
                 Sleep(TimeSpan.FromMilliseconds(5));
             }
