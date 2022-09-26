@@ -64,10 +64,10 @@ internal class PortBruteForceNatTraversal
                 }
             }, cancellationToken);
         }
-        
-        
+
+
         Console.WriteLine("Starting to punch holes");
-        
+
         var message = Encoding.ASCII.GetBytes("Punch!");
         for (var i = 0; i < 10; i++)
         {
@@ -83,10 +83,10 @@ internal class PortBruteForceNatTraversal
                         await selectedReceiver.SendAsync(datagram, cancellationToken);
                         Sleep(TimeSpan.FromMilliseconds(10));
                     }
-                    
+
                     return new UdpChannel(selectedReceiver);
                 }
-                
+
                 var endpoint = new IPEndPoint(destination, minPort + i);
                 await sender.SendAsync(message, endpoint, cancellationToken);
                 Sleep(TimeSpan.FromMilliseconds(5));
@@ -94,7 +94,7 @@ internal class PortBruteForceNatTraversal
 
             Console.WriteLine("Loop");
         }
-        
+
         // TODO: dispose all clients...
 
         throw new Exception("Connection failed:(");
@@ -119,7 +119,11 @@ internal class PortBruteForceNatTraversal
             var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
             Console.WriteLine(3);
             if (result?.PublicEndPoint is not null)
+            {
+                Console.WriteLine("Successfully got public endpoint");
                 return result.PublicEndPoint;
+            }
+
             await Task.Delay(50, cancellationToken);
             Console.WriteLine(4);
             Console.WriteLine(hostName);
@@ -130,23 +134,27 @@ internal class PortBruteForceNatTraversal
         CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Getting ports");
-        var s1 = "stun.nventure.com";
-        var s2 = "stun.qq.com";
+        var s1 = "stun.schlund.de";
+        // var s2 = "stun.jumblo.com";
+        // var s2 = "stun.voipbuster.com";
+        // var s4 = "stun.voipstunt.com";
+        // var s5 = "stun.ekiga.net";
+        // var s6 = "stun.ideasip.com";
+        // var s7 = "stun.voiparound.com";
+        // var s8 = "stun.voipbusterpro.com";
 
         var random = new Random();
-        var queriesAmount = random.Next(2, 4);
+        var queriesAmount = random.Next(2, 3);
 
         try
         {
             var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
                 .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s1, cancellationToken));
-        
-            queriesAmount = random.Next(2, 4);
-        
-            var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
-                .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s2, cancellationToken));
+
+            // var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
+            // .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s2, cancellationToken));
             Console.WriteLine(4.5);
-            var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
+            var responses = await Task.WhenAll(stunQueriesS1);
             Console.WriteLine(5);
             var ports = responses.Select(r => r.Port).ToList();
             Console.WriteLine(string.Join(",", ports));
