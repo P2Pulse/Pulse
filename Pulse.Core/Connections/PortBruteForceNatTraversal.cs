@@ -131,7 +131,7 @@ internal class PortBruteForceNatTraversal
     {
         Console.WriteLine("Getting ports");
         var s1 = "stun.nventure.com";
-        var s2 = "stun.voxox.com";
+        var s2 = "stun.sipgate.net";
 
         var random = new Random();
         var queriesAmount = random.Next(2, 4);
