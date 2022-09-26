@@ -17,11 +17,8 @@ internal class PortBruteForceNatTraversal
         var firstEndpoint = null as IPEndPoint;
         receivers = Enumerable.Repeat(0, count: 200).Select(i =>
         {
-            var udpClient = new UdpClient
-            {
-                ExclusiveAddressUse = false
-            };
-            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            var udpClient = new UdpClient();
+
             if (firstEndpoint is null)
             {
                 udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
@@ -46,10 +43,8 @@ internal class PortBruteForceNatTraversal
         {
             var sender = new UdpClient
             {
-                ExclusiveAddressUse = false
+                Client = r.Client
             };
-            sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            sender.Client.Bind(r.Client.LocalEndPoint!);
             return sender;
         }).ToList();
 
@@ -130,6 +125,7 @@ internal class PortBruteForceNatTraversal
             var server = new IPEndPoint(serverIp, 3478);
             Console.WriteLine(2);
             var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
+            Console.WriteLine("stun error if exists: " + result.QueryError);
             Console.WriteLine(3);
             if (result?.PublicEndPoint is not null)
             {
