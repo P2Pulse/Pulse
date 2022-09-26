@@ -9,7 +9,7 @@ namespace Pulse.Core.Connections;
 internal class PortBruteForceNatTraversal
 {
     private readonly List<UdpClient> receivers;
-    private readonly List<UdpClient> senders;
+    private List<UdpClient> senders;
     private readonly UdpClient receiver;  // TODO: fucking solve this shit
 
     public PortBruteForceNatTraversal()
@@ -30,7 +30,14 @@ internal class PortBruteForceNatTraversal
             udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
             return udpClient;
         }).ToList();
+        
+        receiver = receivers[0];
+        Console.WriteLine("Finished initializing all the clients");
+    }
 
+    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
+        CancellationToken cancellationToken = default)
+    {
         senders = receivers.Select(r =>
         {
             var sender = new UdpClient
@@ -42,12 +49,6 @@ internal class PortBruteForceNatTraversal
             return sender;
         }).ToList();
 
-        Console.WriteLine("Finished initializing all the clients");
-    }
-
-    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
-        CancellationToken cancellationToken = default)
-    {
         Console.WriteLine(8);
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
@@ -101,7 +102,7 @@ internal class PortBruteForceNatTraversal
 
             Console.WriteLine("Loop");
         }
-
+        Sleep(TimeSpan.FromMilliseconds(500));
         // TODO: dispose all clients...
 
         throw new Exception("Connection failed:(");
