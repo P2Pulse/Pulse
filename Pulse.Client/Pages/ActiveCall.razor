@@ -5,23 +5,38 @@
 @inject Microphone Microphone
 @inject Speaker Speaker
 
-<MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
-<MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
+<MudGrid>
+    <MudPaper Height="100%" Width="100%">
+        <MudItem xs="12">
+            <MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
+        </MudItem>
 
-@if (!CurrentCall.Connection.IsCompleted)
-{
-    <p>Connecting...</p>
-}
+        <MudItem xs="12">
+            @if (!CurrentCall.Connection.IsCompleted)
+            {
+                <p>Connecting...</p>
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+            }
+            else
+            {
+                <p>Connected!</p>
+            }
+            <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUp"></MudIconButton>
+        </MudItem>
 
-@if (error is not null)
-{
-    <p>@error</p>
-}
+        @if (error is not null)
+        {
+            <p>@error</p>
+        }
+    </MudPaper>
+</MudGrid>
 
 @code {
     private Call CurrentCall => CallAccessor.CurrentCall!;
     private string? error;
-    
     
     protected override async Task OnInitializedAsync()
     {
@@ -39,4 +54,10 @@
             error = e.ToString();
         }
     }
+
+    private void HangUp()
+    {
+        throw new NotImplementedException();
+    }
+
 }
