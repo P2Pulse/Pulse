@@ -10,9 +10,16 @@ internal class PortBruteForceNatTraversal
 {
     private readonly List<UdpClient> receivers;
     private readonly List<UdpClient> senders;
+    private readonly UdpClient receiver;  // TODO: fucking solve this shit
 
     public PortBruteForceNatTraversal()
     {
+        receiver = new UdpClient
+        {
+            ExclusiveAddressUse = false
+        };
+        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
         receivers = Enumerable.Repeat(0, count: 200).Select(_ =>
         {
             var udpClient = new UdpClient
@@ -149,7 +156,7 @@ internal class PortBruteForceNatTraversal
         try
         {
             var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
-                .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s1, cancellationToken));
+                .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
 
             // var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
             // .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s2, cancellationToken));
