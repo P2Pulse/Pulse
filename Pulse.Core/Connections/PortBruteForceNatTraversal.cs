@@ -10,27 +10,31 @@ internal class PortBruteForceNatTraversal
 {
     private readonly List<UdpClient> receivers;
     private List<UdpClient> senders;
-    private readonly UdpClient receiver;  // TODO: fucking solve this shit
+    private readonly UdpClient receiver; // TODO: fucking solve this shit
 
     public PortBruteForceNatTraversal()
     {
-        receiver = new UdpClient
-        {
-            ExclusiveAddressUse = false
-        };
-        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-        receivers = Enumerable.Repeat(0, count: 200).Select(_ =>
+        var firstEndpoint = null as IPEndPoint;
+        receivers = Enumerable.Repeat(0, count: 200).Select(i =>
         {
             var udpClient = new UdpClient
             {
                 ExclusiveAddressUse = false
             };
             udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+            if (firstEndpoint is null)
+            {
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                firstEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+            }
+            else
+            {
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
+            }
+
             return udpClient;
         }).ToList();
-        
+
         receiver = receivers[0];
         Console.WriteLine("Finished initializing all the clients");
     }
@@ -102,6 +106,7 @@ internal class PortBruteForceNatTraversal
 
             Console.WriteLine("Loop");
         }
+
         Sleep(TimeSpan.FromMilliseconds(500));
         // TODO: dispose all clients...
 
@@ -167,7 +172,7 @@ internal class PortBruteForceNatTraversal
             var ports = responses.Select(r => r.Port).ToList();
             Console.WriteLine(string.Join(",", ports));
             var max = ports.Max();
-            var min = ports.Min() + 50;
+            var min = ports.Min();
             max = 0; // TODO: remove max
             var myIp4Address = responses.First().Address;
             Console.WriteLine(6);
