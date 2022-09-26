@@ -22,11 +22,13 @@
     private Call CurrentCall => CallAccessor.CurrentCall!;
     private string? error;
     
+    
     protected override async Task OnInitializedAsync()
     {
         try
         {
             await using var audioStream = await CurrentCall.Connection;
+            StateHasChanged();
             var microphoneRecording = new CancellationTokenSource();
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call

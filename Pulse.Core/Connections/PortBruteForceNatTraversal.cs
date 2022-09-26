@@ -8,74 +8,96 @@ namespace Pulse.Core.Connections;
 
 internal class PortBruteForceNatTraversal
 {
-    private readonly UdpClient receiver;
+    private readonly List<UdpClient> receivers;
+    private readonly List<UdpClient> senders;
 
     public PortBruteForceNatTraversal()
     {
-        receiver = new UdpClient
+        receivers = Enumerable.Repeat(0, count: 200).Select(_ =>
         {
-            ExclusiveAddressUse = false
-        };
-        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+            var udpClient = new UdpClient
+            {
+                ExclusiveAddressUse = false
+            };
+            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+            return udpClient;
+        }).ToList();
+
+        senders = receivers.Select(r =>
+        {
+            var sender = new UdpClient
+            {
+                ExclusiveAddressUse = false
+            };
+            sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            sender.Client.Bind(r.Client.LocalEndPoint!);
+            return sender;
+        }).ToList();
+
+        Console.WriteLine("Finished initializing all the clients");
     }
 
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
+        Console.WriteLine(8);
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
-        _ = Task.Run(async () =>
+        var selectedReceiver = null as UdpClient;
+        foreach (var receiver in receivers)
         {
-            try
+            Console.WriteLine("Starting to listen");
+            _ = Task.Run(async () =>
             {
-                var message = await receiver.ReceiveAsync(cancellationToken);
-                Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
-                messageRemoteEndPoint = message.RemoteEndPoint;
-                connectionInitiated = true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }, cancellationToken);
-
-        using var sender = new UdpClient();
-        sender.ExclusiveAddressUse = false;
-        sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        sender.Client.Bind(receiver.Client.LocalEndPoint!);
-        var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
+                try
+                {
+                    var message = await receiver.ReceiveAsync(cancellationToken);
+                    Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
+                    messageRemoteEndPoint = message.RemoteEndPoint;
+                    selectedReceiver = receiver;
+                    connectionInitiated = true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }, cancellationToken);
+        }
+        
+        
         Console.WriteLine("Starting to punch holes");
-
-        var random = new Random();
-        var ttl = (short) random.Next(128, 256);
-        while (true)
+        
+        var message = Encoding.ASCII.GetBytes("Punch!");
+        for (var i = 0; i < 10; i++)
         {
-            sender.Ttl = ttl;
-
-            var message = Encoding.ASCII.GetBytes("Punch!");
-            for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
+            foreach (var sender in senders)
             {
                 if (connectionInitiated)
                 {
                     sender.Dispose();
-                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                    for (var i = 0; i < 20; i++)
+                    await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+                    for (var j = 0; j < 20; j++)
                     {
                         var datagram = Encoding.ASCII.GetBytes("Knockout");
-                        await receiver.SendAsync(datagram, cancellationToken);
-                        Sleep(TimeSpan.FromMilliseconds(0.5));
+                        await selectedReceiver.SendAsync(datagram, cancellationToken);
+                        Sleep(TimeSpan.FromMilliseconds(10));
                     }
                     
-                    return new UdpChannel(receiver);
+                    return new UdpChannel(selectedReceiver);
                 }
-
-                var endpoint = new IPEndPoint(destination, destinationPort);
+                
+                var endpoint = new IPEndPoint(destination, minPort + i);
                 await sender.SendAsync(message, endpoint, cancellationToken);
-                Sleep(TimeSpan.FromMilliseconds(0.2));
+                Sleep(TimeSpan.FromMilliseconds(5));
             }
-            Console.WriteLine("loop");
+
+            Console.WriteLine("Loop");
         }
+        
+        // TODO: dispose all clients...
+
+        throw new Exception("Connection failed:(");
     }
 
     private static void Sleep(TimeSpan duration)
@@ -90,40 +112,54 @@ internal class PortBruteForceNatTraversal
     {
         while (true)
         {
+            Console.WriteLine(1);
             var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
             var server = new IPEndPoint(serverIp, 3478);
+            Console.WriteLine(2);
             var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
+            Console.WriteLine(3);
             if (result?.PublicEndPoint is not null)
                 return result.PublicEndPoint;
             await Task.Delay(50, cancellationToken);
+            Console.WriteLine(4);
         }
     }
 
     public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(
         CancellationToken cancellationToken = default)
     {
+        Console.WriteLine("Getting ports");
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
 
         var random = new Random();
         var queriesAmount = random.Next(2, 4);
-        
-        var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
-        
-        queriesAmount = random.Next(2, 4);
-        
-        var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
 
-        var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
-        var ports = responses.Select(r => r.Port).ToList();
-        Console.WriteLine(String.Join(",", ports));
-        var max = ports.Max();
-        var min = ports.Min();
-        min = Math.Max(min - 75, 1);
-        max = Math.Min(max + 105, ushort.MaxValue);
-        var myIp4Address = responses.First().Address;
-        return (myIp4Address, min, max);
+        try
+        {
+            var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
+                .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s1, cancellationToken));
+        
+            queriesAmount = random.Next(2, 4);
+        
+            var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
+                .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s2, cancellationToken));
+            Console.WriteLine(4.5);
+            var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
+            Console.WriteLine(5);
+            var ports = responses.Select(r => r.Port).ToList();
+            Console.WriteLine(string.Join(",", ports));
+            var max = ports.Max();
+            var min = ports.Min() + 50;
+            max = 0; // TODO: remove max
+            var myIp4Address = responses.First().Address;
+            Console.WriteLine(6);
+            return (myIp4Address, min, max);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
