@@ -83,7 +83,7 @@ internal class PortBruteForceNatTraversal
         Console.WriteLine("Starting to punch holes");
 
         var message = Encoding.ASCII.GetBytes("Punch!");
-        for (var i = minPort - 75; i <= minPort + 75; i += 75)
+        for (var i = 0; i < 10; i++)
         {
             foreach (var sender in senders)
             {
@@ -151,35 +151,29 @@ internal class PortBruteForceNatTraversal
     {
         Console.WriteLine("Getting ports");
         var s1 = "stun.schlund.de";
-        // var s2 = "stun.jumblo.com";
-        // var s2 = "stun.voipbuster.com";
-        // var s4 = "stun.voipstunt.com";
-        // var s5 = "stun.ekiga.net";
-        // var s6 = "stun.ideasip.com";
-        // var s7 = "stun.voiparound.com";
-        // var s8 = "stun.voipbusterpro.com";
-
-        var random = new Random();
-        var queriesAmount = random.Next(2, 3);
+        var s2 = "stun.voip.blackberry.com";
 
         try
         {
-            var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
-                .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
-
-            // var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
-            // .Select(i => GetPublicIPEndpointAsync(receivers[0].Client, s2, cancellationToken));
+            Console.WriteLine(4.4);
+            var response1 = await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken);
+            var firstPort = response1.Port;
             Console.WriteLine(4.5);
-            var responses = await Task.WhenAll(stunQueriesS1);
-            Console.WriteLine(5);
-            var ports = responses.Select(r => r.Port).ToList();
-            Console.WriteLine(string.Join(",", ports));
-            var max = ports.Max();
-            var min = ports.Min();
-            max = 0; // TODO: remove max
-            var myIp4Address = responses.First().Address;
+            var response2 = await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken);
+            var secondPort = response2.Port;
+            Console.WriteLine(4.6);
+
+            int minPort;
+            if (firstPort < secondPort)
+                minPort = secondPort + 75;
+            else if (secondPort < firstPort)
+                minPort = secondPort - 75;
+            else
+                minPort = firstPort;
+
+            var myIp4Address = response1.Address;
             Console.WriteLine(6);
-            return (myIp4Address, min, max);
+            return (myIp4Address, minPort, minPort);
         }
         catch (Exception e)
         {
