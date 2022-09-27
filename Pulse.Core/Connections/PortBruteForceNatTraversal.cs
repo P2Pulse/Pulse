@@ -46,7 +46,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
         Console.WriteLine("Finished initializing all the clients");
     }
 
-    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort, 
+    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         bool isInitiator, CancellationToken cancellationToken = default)
     {
         senders = receivers.Select(r =>
@@ -137,20 +137,19 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
         }
 
         Sleep(TimeSpan.FromMilliseconds(250));
-        
+
         if (backupSelectedReceiver is not null)
         {
             Console.WriteLine("No connection established. Trying to establish a backup connection.");
             messageRemoteEndPoint = backupMessageRemoteEndPoint;
             selectedReceiver = backupSelectedReceiver;
-            connectionInitiated = true;
-            if (connectionInitiated)
-            {
-                await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                return new UdpChannel(selectedReceiver);
-            }
+            
+            receivers.Remove(selectedReceiver);
+            
+            await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+            return new UdpChannel(selectedReceiver);
         }
-        
+
         Sleep(TimeSpan.FromMilliseconds(500));
 
         throw new Exception("Connection failed:(");
@@ -229,9 +228,9 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        foreach (var udpClient in receivers.Concat(senders)) 
+        foreach (var udpClient in receivers.Concat(senders))
             udpClient.Dispose();
-        
+
         return ValueTask.CompletedTask;
     }
 }
