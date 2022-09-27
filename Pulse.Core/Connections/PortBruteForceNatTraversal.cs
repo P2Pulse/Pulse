@@ -15,7 +15,7 @@ internal class PortBruteForceNatTraversal
     public PortBruteForceNatTraversal()
     {
         var firstEndpoint = null as IPEndPoint;
-        receivers = Enumerable.Range(0, count: 200).Select(i =>
+        receivers = Enumerable.Range(0, count: 50).Select(i =>
         {
             var udpClient = new UdpClient();
 
@@ -51,6 +51,8 @@ internal class PortBruteForceNatTraversal
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
+        /*minPort = 15000;
+        destination = IPAddress.Parse("18.196.107.59");*/
         senders = receivers.Select(r =>
         {
             var sender = new UdpClient
@@ -88,7 +90,7 @@ internal class PortBruteForceNatTraversal
         Console.WriteLine("Starting to punch holes");
 
         var message = Encoding.ASCII.GetBytes("Punch!");
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < 5; i++)
         {
             foreach (var sender in senders)
             {
@@ -110,7 +112,7 @@ internal class PortBruteForceNatTraversal
                 {
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
-                    var endpoint = new IPEndPoint(destination, minPort + 5 * j * sign);
+                    var endpoint = new IPEndPoint(destination, minPort + 7 * j * sign);
                     await sender.SendAsync(message, endpoint, cancellationToken);
                     Sleep(TimeSpan.FromMilliseconds(2.5));
                 }
@@ -135,56 +137,60 @@ internal class PortBruteForceNatTraversal
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(Socket socket, string hostName,
         CancellationToken cancellationToken)
     {
-        while (true)
+        // Console.WriteLine(1);
+        var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
+        var server = new IPEndPoint(serverIp, 3478);
+        // Console.WriteLine(2);
+        var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP)
+            .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+        // Console.WriteLine("stun error if exists: " + result.QueryError);
+        // Console.WriteLine(3);
+        if (result?.PublicEndPoint is not null)
         {
-            // Console.WriteLine(1);
-            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
-            var server = new IPEndPoint(serverIp, 3478);
-            // Console.WriteLine(2);
-            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
-            // Console.WriteLine("stun error if exists: " + result.QueryError);
-            // Console.WriteLine(3);
-            if (result?.PublicEndPoint is not null)
-            {
-                // Console.WriteLine("Successfully got public endpoint");
-                return result.PublicEndPoint;
-            }
-
-            await Task.Delay(50, cancellationToken);
-            // Console.WriteLine(4);
-            // Console.WriteLine(hostName);
+            // Console.WriteLine("Successfully got public endpoint");
+            return result.PublicEndPoint;
         }
+
+        throw new Exception("Failed to get response from STUN server");
     }
 
     public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(
         CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Getting ports");
-
-        var s1 = "stun.schlund.de";
-        var s2 = "stun.voip.blackberry.com";
+        var stunServers = new[]
+        {
+            "iphone-stun.strato-iphone.de", "stun.12connect.com", "stun.12voip.com", "stun.1und1.de",
+            "stun.acrobits.cz", "stun.actionvoip.com", "stun.aeta-audio.com", "stun.aeta.com", "stun.altar.com.pl",
+            "stun.annatel.net", "stun.avigora.fr", "stun.bluesip.net", "stun.cablenet-as.net",
+            "stun.callromania.ro", "stun.callwithus.com", "stun.cheapvoip.com", "stun.commpeak.com", "stun.cope.es",
+            "stun.counterpath.com", "stun.counterpath.net", "stun.dcalling.de", "stun.demos.ru", "stun.dus.net",
+            "stun.easycall.pl", "stun.easyvoip.com", "stun.ekiga.net", "stun.epygi.com", "stun.etoilediese.fr",
+            "stun.freecall.com", "stun.freeswitch.org", "stun.freevoipdeal.com", "stun.gmx.de", "stun.gmx.net",
+            "stun.halonet.pl", "stun.hoiio.com", "stun.hosteurope.de", "stun.infra.net", "stun.internetcalls.com",
+            "stun.intervoip.com", "stun.ippi.fr", "stun.ipshka.com", "stun.it1.hr", "stun.ivao.aero",
+            "stun.jumblo.com", "stun.justvoip.com", "stun.liveo.fr", "stun.lowratevoip.com", "stun.lundimatin.fr",
+            "stun.mit.de", "stun.miwifi.com"
+        };
 
         try
         {
-            Console.WriteLine(4.4);
-            var response1 = await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken);
-            var firstPort = response1.Port;
-            Console.WriteLine(4.5);
-            var response2 = await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken);
-            var secondPort = response2.Port;
-            Console.WriteLine(4.6);
+            var responses = await Task.WhenAll(stunServers.Select(async s =>
+            {
+                try
+                {
+                    return await GetPublicIPEndpointAsync(receiver.Client, s, cancellationToken);
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to get response from " + s);
+                    return null;
+                }
+            }));
 
-            int minPort;
-            if (firstPort < secondPort)
-                minPort = secondPort + 30;
-            else if (secondPort < firstPort)
-                minPort = secondPort - 30;
-            else
-                minPort = firstPort;
+            var minPort = (int)responses.Where(r => r is not null).Select(r => r!.Port).Average();
 
-            var myIp4Address = response1.Address;
-            Console.WriteLine($"firstPort {firstPort} secondPort {secondPort}");
-            return (myIp4Address, minPort, minPort);
+            return (responses.First(r => r is not null)!.Address, minPort, minPort);
         }
         catch (Exception e)
         {
