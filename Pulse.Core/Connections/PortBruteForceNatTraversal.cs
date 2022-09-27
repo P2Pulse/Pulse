@@ -49,8 +49,8 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
-        /*minPort = 15000;
-        destination = IPAddress.Parse("18.196.107.59");*/
+        // minPort = 15000;
+        // destination = IPAddress.Parse("18.196.107.59");
         senders = receivers.Select(r =>
         {
             var sender = new UdpClient
@@ -86,7 +86,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
         Console.WriteLine("Starting to punch holes");
 
         var message = Encoding.ASCII.GetBytes("Punch!");
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 3; i++)
         {
             foreach (var sender in senders)
             {
