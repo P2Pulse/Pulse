@@ -15,7 +15,7 @@ internal class PortBruteForceNatTraversal
     public PortBruteForceNatTraversal()
     {
         var firstEndpoint = null as IPEndPoint;
-        receivers = Enumerable.Range(0, count: 50).Select(i =>
+        receivers = Enumerable.Range(0, count: 200).Select(i =>
         {
             var udpClient = new UdpClient();
 
@@ -51,8 +51,8 @@ internal class PortBruteForceNatTraversal
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
-        /*minPort = 15000;
-        destination = IPAddress.Parse("18.196.107.59");*/
+        // minPort = 15000;
+        // destination = IPAddress.Parse("18.196.107.59");
         senders = receivers.Select(r =>
         {
             var sender = new UdpClient
@@ -90,7 +90,7 @@ internal class PortBruteForceNatTraversal
         Console.WriteLine("Starting to punch holes");
 
         var message = Encoding.ASCII.GetBytes("Punch!");
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 3; i++)
         {
             foreach (var sender in senders)
             {
@@ -108,11 +108,11 @@ internal class PortBruteForceNatTraversal
                     return new UdpChannel(selectedReceiver);
                 }
 
-                for (var j = 0; j < 5; j++)
+                for (var j = 0; j < 10; j++)
                 {
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
-                    var endpoint = new IPEndPoint(destination, minPort + 7 * j * sign);
+                    var endpoint = new IPEndPoint(destination, minPort + 3 * j * sign);
                     await sender.SendAsync(message, endpoint, cancellationToken);
                     Sleep(TimeSpan.FromMilliseconds(2.5));
                 }
