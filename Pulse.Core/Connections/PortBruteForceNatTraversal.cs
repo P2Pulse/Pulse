@@ -75,26 +75,23 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                     Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                     lock (punchingMessageLock)
                     {
-                        messageRemoteEndPoint = message.RemoteEndPoint;
-                        selectedReceiver = receiver;
-                        connectionInitiated = true;
-                    }
-                    var content = Encoding.ASCII.GetString(message.Buffer);
-                    Console.WriteLine($"Got a punching message: {content}");
-                    if (content == expectedMessage)
-                    {
-                        messageRemoteEndPoint = message.RemoteEndPoint;
-                        selectedReceiver = receiver;
-                        connectionInitiated = true;
-                    }
-                    else if (backupMessageRemoteEndPoint is not null)
-                    {
-                        backupMessageRemoteEndPoint = message.RemoteEndPoint;
-                        backupSelectedReceiver = receiver;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Ignoring last punching message.");
+                        var content = Encoding.ASCII.GetString(message.Buffer);
+                        Console.WriteLine($"Got a punching message: {content}");
+                        if (content == expectedMessage)
+                        {
+                            messageRemoteEndPoint = message.RemoteEndPoint;
+                            selectedReceiver = receiver;
+                            connectionInitiated = true;
+                        }
+                        else if (backupMessageRemoteEndPoint is not null)
+                        {
+                            backupMessageRemoteEndPoint = message.RemoteEndPoint;
+                            backupSelectedReceiver = receiver;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Ignoring last punching message.");
+                        }
                     }
                 }
                 catch (Exception e)
