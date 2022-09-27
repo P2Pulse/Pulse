@@ -83,7 +83,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                             selectedReceiver = receiver;
                             connectionInitiated = true;
                         }
-                        else if (backupMessageRemoteEndPoint is not null)
+                        else if (backupMessageRemoteEndPoint is null)
                         {
                             backupMessageRemoteEndPoint = message.RemoteEndPoint;
                             backupSelectedReceiver = receiver;
