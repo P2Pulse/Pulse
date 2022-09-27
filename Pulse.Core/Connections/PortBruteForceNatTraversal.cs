@@ -75,6 +75,9 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                     Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                     lock (punchingMessageLock)
                     {
+                        if (connectionInitiated)
+                            return;
+
                         var content = Encoding.ASCII.GetString(message.Buffer);
                         Console.WriteLine($"Got a punching message: {content}");
                         if (content == expectedMessage)
@@ -96,7 +99,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    // Console.WriteLine(e);
                 }
             }, cancellationToken);
         }
@@ -143,9 +146,9 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
             Console.WriteLine("No connection established. Trying to establish a backup connection.");
             messageRemoteEndPoint = backupMessageRemoteEndPoint;
             selectedReceiver = backupSelectedReceiver;
-            
+
             receivers.Remove(selectedReceiver);
-            
+
             await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
             return new UdpChannel(selectedReceiver);
         }
