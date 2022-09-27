@@ -14,26 +14,19 @@ internal class PortBruteForceNatTraversal
 
     public PortBruteForceNatTraversal()
     {
-        var firstEndpoint = null as IPEndPoint;
+        var firstEndpoint = 33454;
         receivers = Enumerable.Repeat(0, count: 200).Select(i =>
         {
             var udpClient = new UdpClient();
 
-            if (firstEndpoint is null)
+            try
             {
-                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-                firstEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint + i)); // TODO: can overflow
             }
-            else
+            catch (SocketException)
             {
-                try
-                {
-                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
-                }
-                catch (SocketException)
-                {
-                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
-                }
+                Console.WriteLine("fuck");
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
             }
 
             return udpClient;
@@ -61,7 +54,6 @@ internal class PortBruteForceNatTraversal
         var selectedReceiver = null as UdpClient;
         foreach (var receiver in receivers)
         {
-            Console.WriteLine("Starting to listen");
             _ = Task.Run(async () =>
             {
                 try
