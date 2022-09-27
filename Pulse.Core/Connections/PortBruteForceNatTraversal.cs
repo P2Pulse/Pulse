@@ -72,14 +72,13 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                 try
                 {
                     var message = await receiver.ReceiveAsync(cancellationToken);
-                    Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                     lock (punchingMessageLock)
                     {
                         if (connectionInitiated)
                             return;
 
                         var content = Encoding.ASCII.GetString(message.Buffer);
-                        Console.WriteLine($"Got a punching message: {content}");
+                        Console.WriteLine($"Got a punching message: {content} from {message.RemoteEndPoint}");
                         if (content == expectedMessage)
                         {
                             messageRemoteEndPoint = message.RemoteEndPoint;
@@ -107,7 +106,6 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
 
         Console.WriteLine("Starting to punch holes");
 
-        var message = Encoding.ASCII.GetBytes("Punch!");
         for (var i = 0; i < 3; i++)
         {
             foreach (var sender in senders)
@@ -131,6 +129,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
                     var endpoint = new IPEndPoint(destination, minPort + 3 * j * sign);
+                    var message = Encoding.ASCII.GetBytes($"Punch! {endpoint.Port}");
                     await sender.SendAsync(message, endpoint, cancellationToken);
                     Sleep(TimeSpan.FromMilliseconds(2.5));
                 }
