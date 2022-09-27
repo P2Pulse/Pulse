@@ -21,8 +21,12 @@ internal class PortBruteForceNatTraversal
 
             if (firstEndpoint is null)
             {
-                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-                firstEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+                do
+                {
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                    firstEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+                    Console.WriteLine($"Trying to obtain first endpoint");
+                } while (firstEndpoint.Port > 65000);
             }
             else
             {
@@ -102,9 +106,14 @@ internal class PortBruteForceNatTraversal
                     return new UdpChannel(selectedReceiver);
                 }
 
-                var endpoint = new IPEndPoint(destination, minPort);
-                await sender.SendAsync(message, endpoint, cancellationToken);
-                Sleep(TimeSpan.FromMilliseconds(5));
+                for (var j = 0; j < 5; j++)
+                {
+                    var sign = -1;
+                    sign = (int)Math.Pow(sign, j);
+                    var endpoint = new IPEndPoint(destination, minPort + 5 * j * sign);
+                    await sender.SendAsync(message, endpoint, cancellationToken);
+                    Sleep(TimeSpan.FromMilliseconds(2.5));
+                }
             }
 
             Console.WriteLine("Loop");
@@ -128,22 +137,22 @@ internal class PortBruteForceNatTraversal
     {
         while (true)
         {
-            Console.WriteLine(1);
+            // Console.WriteLine(1);
             var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
             var server = new IPEndPoint(serverIp, 3478);
-            Console.WriteLine(2);
+            // Console.WriteLine(2);
             var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
-            Console.WriteLine("stun error if exists: " + result.QueryError);
-            Console.WriteLine(3);
+            // Console.WriteLine("stun error if exists: " + result.QueryError);
+            // Console.WriteLine(3);
             if (result?.PublicEndPoint is not null)
             {
-                Console.WriteLine("Successfully got public endpoint");
+                // Console.WriteLine("Successfully got public endpoint");
                 return result.PublicEndPoint;
             }
 
             await Task.Delay(50, cancellationToken);
-            Console.WriteLine(4);
-            Console.WriteLine(hostName);
+            // Console.WriteLine(4);
+            // Console.WriteLine(hostName);
         }
     }
 
@@ -151,6 +160,7 @@ internal class PortBruteForceNatTraversal
         CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Getting ports");
+
         var s1 = "stun.schlund.de";
         var s2 = "stun.voip.blackberry.com";
 
@@ -166,14 +176,14 @@ internal class PortBruteForceNatTraversal
 
             int minPort;
             if (firstPort < secondPort)
-                minPort = secondPort + 75;
+                minPort = secondPort + 30;
             else if (secondPort < firstPort)
-                minPort = secondPort - 75;
+                minPort = secondPort - 30;
             else
                 minPort = firstPort;
 
             var myIp4Address = response1.Address;
-            Console.WriteLine(6);
+            Console.WriteLine($"firstPort {firstPort} secondPort {secondPort}");
             return (myIp4Address, minPort, minPort);
         }
         catch (Exception e)
