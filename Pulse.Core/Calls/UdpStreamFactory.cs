@@ -8,11 +8,11 @@ namespace Pulse.Core.Calls;
 internal class UdpStreamFactory
 {
     public async Task<Stream> ConnectAsync(
-        Func<JoinCallRequest, Task<ConnectionDetails>> exchangeConnectionInfo, bool isInitiator,
+        Func<JoinCallRequest, Task<ConnectionDetails>> exchangeConnectionInfo,
         CancellationToken cancellationToken = default
     )
     {
-        await using var portBruteForcer = new PortBruteForceNatTraversal();
+        var portBruteForcer = new PortBruteForceNatTraversal();
         var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(
             cancellationToken
         );
@@ -34,7 +34,6 @@ internal class UdpStreamFactory
             IPAddress.Parse(connectionInfo.IPAddress),
             connectionInfo.MinPort,
             connectionInfo.MaxPort,
-            isInitiator: isInitiator,
             cancellationToken
         );
 
