@@ -6,11 +6,10 @@ using STUN;
 
 namespace Pulse.Core.Connections;
 
-internal class PortBruteForceNatTraversal
+internal class PortBruteForceNatTraversal : IAsyncDisposable
 {
     private readonly List<UdpClient> receivers;
     private List<UdpClient> senders;
-    private readonly UdpClient receiver; // TODO: fucking solve this shit
 
     public PortBruteForceNatTraversal()
     {
@@ -44,7 +43,6 @@ internal class PortBruteForceNatTraversal
             return udpClient;
         }).ToList();
 
-        receiver = receivers[0];
         Console.WriteLine("Finished initializing all the clients");
     }
 
@@ -60,6 +58,7 @@ internal class PortBruteForceNatTraversal
             return sender;
         }).ToList();
 
+        var punchingMessageLock = new object();
         var expectedMessage = isInitiator ? "Knockout" : "Punch!";
         IPEndPoint? messageRemoteEndPoint = null;
         IPEndPoint? backupMessageRemoteEndPoint = null;
@@ -73,6 +72,13 @@ internal class PortBruteForceNatTraversal
                 try
                 {
                     var message = await receiver.ReceiveAsync(cancellationToken);
+                    Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
+                    lock (punchingMessageLock)
+                    {
+                        messageRemoteEndPoint = message.RemoteEndPoint;
+                        selectedReceiver = receiver;
+                        connectionInitiated = true;
+                    }
                     var content = Encoding.ASCII.GetString(message.Buffer);
                     Console.WriteLine($"Got a punching message: {content}");
                     if (content == expectedMessage)
@@ -116,6 +122,7 @@ internal class PortBruteForceNatTraversal
                         Sleep(TimeSpan.FromMilliseconds(10));
                     }
 
+                    receivers.Remove(selectedReceiver);
                     return new UdpChannel(selectedReceiver);
                 }
 
@@ -221,5 +228,13 @@ internal class PortBruteForceNatTraversal
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        foreach (var udpClient in receivers.Concat(senders)) 
+            udpClient.Dispose();
+        
+        return ValueTask.CompletedTask;
     }
 }

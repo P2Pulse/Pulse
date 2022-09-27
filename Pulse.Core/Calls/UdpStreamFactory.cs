@@ -12,7 +12,7 @@ internal class UdpStreamFactory
         CancellationToken cancellationToken = default
     )
     {
-        var portBruteForcer = new PortBruteForceNatTraversal();
+        await using var portBruteForcer = new PortBruteForceNatTraversal();
         var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(
             cancellationToken
         );
