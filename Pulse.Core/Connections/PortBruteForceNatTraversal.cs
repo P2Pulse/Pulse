@@ -14,25 +14,32 @@ internal class PortBruteForceNatTraversal
 
     public PortBruteForceNatTraversal()
     {
-        var fucks = 0;
-        var firstEndpoint = 33454;
-        receivers = Enumerable.Repeat(0, count: 200).Select(i =>
+        var firstEndpoint = null as IPEndPoint;
+        receivers = Enumerable.Range(0, count: 200).Select(i =>
         {
             var udpClient = new UdpClient();
 
-            try
+            if (firstEndpoint is null)
             {
-                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint + i)); // TODO: can overflow
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                firstEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
             }
-            catch (SocketException)
+            else
             {
-                fucks++;
-                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
+                try
+                {
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
+                }
+                catch (SocketException)
+                {
+                    Console.WriteLine("fuck");
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
+                }
             }
 
             return udpClient;
         }).ToList();
-        Console.WriteLine($"Fucks: {fucks}");
+
         receiver = receivers[0];
         Console.WriteLine("Finished initializing all the clients");
     }
@@ -55,6 +62,7 @@ internal class PortBruteForceNatTraversal
         var selectedReceiver = null as UdpClient;
         foreach (var receiver in receivers)
         {
+            // Console.WriteLine("Starting to listen");
             _ = Task.Run(async () =>
             {
                 try
