@@ -14,6 +14,7 @@ internal class PortBruteForceNatTraversal
 
     public PortBruteForceNatTraversal()
     {
+        var fucks = 0;
         var firstEndpoint = 33454;
         receivers = Enumerable.Repeat(0, count: 200).Select(i =>
         {
@@ -25,13 +26,13 @@ internal class PortBruteForceNatTraversal
             }
             catch (SocketException)
             {
-                Console.WriteLine("fuck");
+                fucks++;
                 udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0)); // TODO: Fix this
             }
 
             return udpClient;
         }).ToList();
-
+        Console.WriteLine($"Fucks: {fucks}");
         receiver = receivers[0];
         Console.WriteLine("Finished initializing all the clients");
     }
