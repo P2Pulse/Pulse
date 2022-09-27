@@ -42,6 +42,6 @@ internal class UdpCallInitiator : ICallInitiator
             Console.WriteLine("The other person answered the call");
 
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct))!;
-        }, ct);
+        }, isInitiator: true, ct);
     }
 }

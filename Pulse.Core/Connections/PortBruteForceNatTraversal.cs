@@ -32,7 +32,7 @@ internal class PortBruteForceNatTraversal
             {
                 try
                 {
-                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i)); // TODO: can overflow
+                    udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, firstEndpoint.Port + i));
                 }
                 catch (SocketException)
                 {
@@ -48,11 +48,9 @@ internal class PortBruteForceNatTraversal
         Console.WriteLine("Finished initializing all the clients");
     }
 
-    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
-        CancellationToken cancellationToken = default)
+    public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort, 
+        bool isInitiator, CancellationToken cancellationToken = default)
     {
-        // minPort = 15000;
-        // destination = IPAddress.Parse("18.196.107.59");
         senders = receivers.Select(r =>
         {
             var sender = new UdpClient
@@ -62,22 +60,36 @@ internal class PortBruteForceNatTraversal
             return sender;
         }).ToList();
 
-        Console.WriteLine(8);
+        var expectedMessage = isInitiator ? "Knockout" : "Punch!";
         IPEndPoint? messageRemoteEndPoint = null;
+        IPEndPoint? backupMessageRemoteEndPoint = null;
         var connectionInitiated = false;
         var selectedReceiver = null as UdpClient;
+        var backupSelectedReceiver = null as UdpClient;
         foreach (var receiver in receivers)
         {
-            // Console.WriteLine("Starting to listen");
             _ = Task.Run(async () =>
             {
                 try
                 {
                     var message = await receiver.ReceiveAsync(cancellationToken);
-                    Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
-                    messageRemoteEndPoint = message.RemoteEndPoint;
-                    selectedReceiver = receiver;
-                    connectionInitiated = true;
+                    var content = Encoding.ASCII.GetString(message.Buffer);
+                    Console.WriteLine($"Got a punching message: {content}");
+                    if (content == expectedMessage)
+                    {
+                        messageRemoteEndPoint = message.RemoteEndPoint;
+                        selectedReceiver = receiver;
+                        connectionInitiated = true;
+                    }
+                    else if (backupMessageRemoteEndPoint is not null)
+                    {
+                        backupMessageRemoteEndPoint = message.RemoteEndPoint;
+                        backupSelectedReceiver = receiver;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ignoring last punching message.");
+                    }
                 }
                 catch (Exception e)
                 {
@@ -96,7 +108,6 @@ internal class PortBruteForceNatTraversal
             {
                 if (connectionInitiated)
                 {
-                    sender.Dispose();
                     await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
                     for (var j = 0; j < 20; j++)
                     {
@@ -121,8 +132,22 @@ internal class PortBruteForceNatTraversal
             Console.WriteLine("Loop");
         }
 
+        Sleep(TimeSpan.FromMilliseconds(250));
+        
+        if (backupSelectedReceiver is not null)
+        {
+            Console.WriteLine("No connection established. Trying to establish a backup connection.");
+            messageRemoteEndPoint = backupMessageRemoteEndPoint;
+            selectedReceiver = backupSelectedReceiver;
+            connectionInitiated = true;
+            if (connectionInitiated)
+            {
+                await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+                return new UdpChannel(selectedReceiver);
+            }
+        }
+        
         Sleep(TimeSpan.FromMilliseconds(500));
-        // TODO: dispose all clients...
 
         throw new Exception("Connection failed:(");
     }
