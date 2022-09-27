@@ -6,16 +6,15 @@ using STUN;
 
 namespace Pulse.Core.Connections;
 
-internal class PortBruteForceNatTraversal
+internal class PortBruteForceNatTraversal : IAsyncDisposable
 {
     private readonly List<UdpClient> receivers;
     private List<UdpClient> senders;
-    private readonly UdpClient receiver; // TODO: fucking solve this shit
 
     public PortBruteForceNatTraversal()
     {
         var firstEndpoint = null as IPEndPoint;
-        receivers = Enumerable.Range(0, count: 50).Select(i =>
+        receivers = Enumerable.Range(0, count: 200).Select(i =>
         {
             var udpClient = new UdpClient();
 
@@ -44,7 +43,6 @@ internal class PortBruteForceNatTraversal
             return udpClient;
         }).ToList();
 
-        receiver = receivers[0];
         Console.WriteLine("Finished initializing all the clients");
     }
 
@@ -62,13 +60,11 @@ internal class PortBruteForceNatTraversal
             return sender;
         }).ToList();
 
-        Console.WriteLine(8);
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         var selectedReceiver = null as UdpClient;
         foreach (var receiver in receivers)
         {
-            // Console.WriteLine("Starting to listen");
             _ = Task.Run(async () =>
             {
                 try
@@ -105,14 +101,15 @@ internal class PortBruteForceNatTraversal
                         Sleep(TimeSpan.FromMilliseconds(10));
                     }
 
+                    receivers.Remove(selectedReceiver);
                     return new UdpChannel(selectedReceiver);
                 }
 
-                for (var j = 0; j < 5; j++)
+                for (var j = 0; j < 10; j++)
                 {
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
-                    var endpoint = new IPEndPoint(destination, minPort + 7 * j * sign);
+                    var endpoint = new IPEndPoint(destination, minPort + 3 * j * sign);
                     await sender.SendAsync(message, endpoint, cancellationToken);
                     Sleep(TimeSpan.FromMilliseconds(2.5));
                 }
@@ -196,5 +193,13 @@ internal class PortBruteForceNatTraversal
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        foreach (var udpClient in receivers.Concat(senders)) 
+            udpClient.Dispose();
+        
+        return ValueTask.CompletedTask;
     }
 }
