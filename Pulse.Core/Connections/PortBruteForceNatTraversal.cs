@@ -137,12 +137,11 @@ internal class PortBruteForceNatTraversal
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(Socket socket, string hostName,
         CancellationToken cancellationToken)
     {
-        // Console.WriteLine(1);
         var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
         var server = new IPEndPoint(serverIp, 3478);
         // Console.WriteLine(2);
         var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP)
-            .WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         // Console.WriteLine("stun error if exists: " + result.QueryError);
         // Console.WriteLine(3);
         if (result?.PublicEndPoint is not null)
@@ -175,11 +174,11 @@ internal class PortBruteForceNatTraversal
 
         try
         {
-            var responses = await Task.WhenAll(stunServers.Select(async s =>
+            var responses = await Task.WhenAll(stunServers.Select(async (s, index) =>
             {
                 try
                 {
-                    return await GetPublicIPEndpointAsync(receiver.Client, s, cancellationToken);
+                    return await GetPublicIPEndpointAsync(receivers[index].Client, s, cancellationToken);
                 }
                 catch
                 {
