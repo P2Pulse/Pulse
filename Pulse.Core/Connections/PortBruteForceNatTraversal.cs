@@ -105,7 +105,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
 
 
         Console.WriteLine("Starting to punch holes");
-
+        var message = Encoding.ASCII.GetBytes("Punch!");
         for (var i = 0; i < 3; i++)
         {
             foreach (var sender in senders)
@@ -129,7 +129,6 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
                     var endpoint = new IPEndPoint(destination, minPort + 3 * j * sign);
-                    var message = Encoding.ASCII.GetBytes($"Punch! {endpoint.Port}");
                     await sender.SendAsync(message, endpoint, cancellationToken);
                     Sleep(TimeSpan.FromMilliseconds(2.5));
                 }
