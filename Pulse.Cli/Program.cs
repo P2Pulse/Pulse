@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Pulse.Core;
 using Pulse.Core.Calls;
@@ -27,19 +26,29 @@ if (answer == "i")
     var callee = Console.ReadLine();
     Console.WriteLine("Calling...");
     var callInitiator = serviceProvider.GetRequiredService<ICallInitiator>();
-    var stream = await callInitiator.CallAsync(callee!);
-
+    var audioStream = await callInitiator.CallAsync(callee!);
+    
+    await using var fileStream = File.Create("output.wav");
     await using var file = File.OpenRead("music.wav");
-    await Task.Delay(75);  // TODO on a lower level - Let's wait a bit for the other party to be ready
-    var sw = Stopwatch.StartNew();
-    await file.CopyToAsync(stream, bufferSize: 320);  // TODO: put this on a lower level
-    sw.Stop();
-    Console.WriteLine($"Sent {file.Length} bytes in {sw.Elapsed.TotalSeconds} seconds");
+    
+    var receive = audioStream.CopyToAsync(fileStream);
+    var send = file.CopyToAsync(audioStream, bufferSize: 320);
+    await Task.WhenAll(send, receive);
 }
 else
 {
     Console.WriteLine("Polling...");
-    _ = serviceProvider.GetRequiredService<IncomingCallPoller>();
+    var poller = serviceProvider.GetRequiredService<IncomingCallPoller>();
+    string? username = null;
+    while ((username = await poller.PollAsync()) is null)
+    {
+        await Task.Delay(200);
+    }
+    Console.WriteLine($"Incoming call from {username}");
+    var callAcceptor = serviceProvider.GetRequiredService<ICallAcceptor>();
+    await using var stream = await callAcceptor.AnswerCallAsync();
+    await using var fileStream = File.Create("output.wav");
+    await stream.CopyToAsync(fileStream);
 }
 
 
