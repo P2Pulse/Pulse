@@ -27,7 +27,7 @@ internal class UdpChannel : IConnection
             var message = await udpClient.ReceiveAsync(cancellationToken);
             
             var textualContent = Encoding.ASCII.GetString(message.Buffer);
-            if (textualContent is "Knockout" or "Punch!")
+            if (textualContent.StartsWith("Knockout") || textualContent.StartsWith("Punch!"))
                 continue; // Ignore internal messages that come from the initiation phase
 
             var packet = PacketEncoder.Decode(message.Buffer);

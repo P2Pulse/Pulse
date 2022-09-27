@@ -31,6 +31,6 @@ internal class UdpCallAcceptor : ICallAcceptor
             }
 
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct))!;
-        }, isInitiator: false , ct);
+        }, ct);
     }
 }
