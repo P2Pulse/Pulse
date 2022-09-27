@@ -5,45 +5,40 @@
 @inject Microphone Microphone
 @inject Speaker Speaker
 
-<MudGrid>
-    <MudPaper Height="100%" Width="100%">
-        <MudItem xs="12">
-            <MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
-        </MudItem>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
-        </MudItem>
-
-        <MudItem xs="12">
-            @if (!CurrentCall.Connection.IsCompleted)
-            {
-                <p>Connecting...</p>
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-            }
-            else
-            {
-                <p>Connected!</p>
-            }
-            <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUp"></MudIconButton>
-        </MudItem>
-
+<MudPaper Class="pa-4 ma-4" Height="85vh">
+    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
+        <MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
+        <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
+        @if (!CurrentCall.Connection.IsCompleted)
+        {
+            <p>Connecting...</p>
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        }
+        else
+        {
+            <p>Connected!</p>
+        }
         @if (error is not null)
         {
-            <p>@error</p>
+            <p>@error</p> // TODO: remove this
         }
-    </MudPaper>
-</MudGrid>
+        <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUp"></MudIconButton>
+    </MudStack>
+</MudPaper>
 
 @code {
     private Call CurrentCall => CallAccessor.CurrentCall!;
     private string? error;
-    
+    private bool callHanged;
+    private Stream? callAudioStream;
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             await using var audioStream = await CurrentCall.Connection;
             StateHasChanged();
+            callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
@@ -55,9 +50,12 @@
         }
     }
 
-    private void HangUp()
+    private async Task HangUp()
     {
-        throw new NotImplementedException();
+        if (callAudioStream != null)
+            await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
+
+        callHanged = true;
     }
 
 }
