@@ -109,22 +109,22 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
         {
             foreach (var sender in senders)
             {
-                if (connectionInitiated)
-                {
-                    await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                    for (var j = 0; j < 20; j++)
-                    {
-                        var datagram = Encoding.ASCII.GetBytes($"Knockout, sent to {messageRemoteEndPoint.Port}");
-                        await selectedReceiver.SendAsync(datagram, cancellationToken);
-                        Sleep(TimeSpan.FromMilliseconds(10));
-                    }
-
-                    receivers.Remove(selectedReceiver);
-                    return new UdpChannel(selectedReceiver);
-                }
-
                 for (var j = 0; j < 10; j++)
                 {
+                    if (connectionInitiated)
+                    {
+                        await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+                        for (var k = 0; k < 20; k++)
+                        {
+                            var datagram = Encoding.ASCII.GetBytes($"Knockout, sent to {messageRemoteEndPoint.Port}");
+                            await selectedReceiver.SendAsync(datagram, cancellationToken);
+                            Sleep(TimeSpan.FromMilliseconds(10));
+                        }
+
+                        receivers.Remove(selectedReceiver);
+                        return new UdpChannel(selectedReceiver);
+                    }
+
                     var sign = -1;
                     sign = (int)Math.Pow(sign, j);
                     var endpoint = new IPEndPoint(destination, minPort + 3 * j * sign);
