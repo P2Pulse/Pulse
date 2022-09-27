@@ -10,7 +10,7 @@ services.AddHttpClient(serverHttpClient, client =>
 {
     client.BaseAddress = new Uri("https://pulse.gurgaller.com");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzQxNDg5NywiZXhwIjoxNjY0MDE5Njk3LCJpYXQiOjE2NjM0MTQ4OTd9.QEbafJDu3GVVaefZdtZEKIWCaS0-OLgsaGTz05tNSAE");
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzkzNTY3OSwiZXhwIjoxNjY0NTQwNDc5LCJpYXQiOjE2NjM5MzU2Nzl9.eIrF51xJl0hh817vTJOjY7Olrpp8mwTMhUsDLj-lhDM");
 });
 services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
 services.AddPulse();
