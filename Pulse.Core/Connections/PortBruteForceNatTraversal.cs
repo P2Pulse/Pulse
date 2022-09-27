@@ -60,6 +60,7 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
             return sender;
         }).ToList();
 
+        var punchingMessageLock = new object();
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         var selectedReceiver = null as UdpClient;
@@ -71,9 +72,12 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
                 {
                     var message = await receiver.ReceiveAsync(cancellationToken);
                     Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
-                    messageRemoteEndPoint = message.RemoteEndPoint;
-                    selectedReceiver = receiver;
-                    connectionInitiated = true;
+                    lock (punchingMessageLock)
+                    {
+                        messageRemoteEndPoint = message.RemoteEndPoint;
+                        selectedReceiver = receiver;
+                        connectionInitiated = true;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -92,7 +96,6 @@ internal class PortBruteForceNatTraversal : IAsyncDisposable
             {
                 if (connectionInitiated)
                 {
-                    sender.Dispose();
                     await selectedReceiver!.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
                     for (var j = 0; j < 20; j++)
                     {
