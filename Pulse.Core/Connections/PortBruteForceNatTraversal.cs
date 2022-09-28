@@ -52,7 +52,7 @@ internal class PortBruteForceNatTraversal
             {
                 if (connectionInitiated)
                 {
-                    sender.Dispose();
+                    sender.Client = null;  // Prevents closing the socket when disposing the client because we are using the same socket for both sending and receiving
                     await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
                     for (var i = 0; i < 20; i++)
                     {
