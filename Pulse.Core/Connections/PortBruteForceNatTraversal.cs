@@ -19,9 +19,9 @@ internal class PortBruteForceNatTraversal
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
-        /*destination = IPAddress.Parse("18.198.4.113");
-        maxPort = 14000 + (maxPort - minPort);
-        minPort = 14000;*/
+        // destination = IPAddress.Parse("18.198.4.113");
+        // maxPort = 15000 + (maxPort - minPort);
+        // minPort = 15000;
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         _ = Task.Run(async () =>
@@ -45,7 +45,7 @@ internal class PortBruteForceNatTraversal
         };
         Console.WriteLine("Starting to punch holes");
 
-        while (true)
+        while (true) // TODO
         {
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
@@ -66,7 +66,7 @@ internal class PortBruteForceNatTraversal
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 await sender.SendAsync(message, endpoint, cancellationToken);
-                Sleep(TimeSpan.FromMilliseconds(15));
+                Sleep(TimeSpan.FromMilliseconds(7));
             }
             Console.WriteLine("loop");
         }
@@ -99,25 +99,19 @@ internal class PortBruteForceNatTraversal
         var s1 = "stun.schlund.de";
         var s2 = "stun.jumblo.com";
 
-        var random = new Random();
-        var queriesAmount = random.Next(2, 4);
+        var IPEndPoints = new List<IPEndPoint>();
         
-        var stunQueriesS1 = Enumerable.Range(0, queriesAmount)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
+        IPEndPoints.Add(await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
+        IPEndPoints.Add(await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
         
-        queriesAmount = random.Next(2, 4);
-        
-        var stunQueriesS2 = Enumerable.Range(0, queriesAmount)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
+        var ports = IPEndPoints.Select(i => i.Port).ToList();
 
-        var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
-        var ports = responses.Select(r => r.Port).ToList();
-        Console.WriteLine(String.Join(",", ports));
+        Console.WriteLine(String.Join(",", IPEndPoints));
         var max = ports.Max();
         var min = ports.Min();
-        min = Math.Max(min - 75, 1);
-        max = Math.Min(max + 105, ushort.MaxValue);
-        var myIp4Address = responses.First().Address;
+        min = Math.Max(min - 375, 1);
+        max = Math.Min(max + 375, ushort.MaxValue);
+        var myIp4Address = IPEndPoints.First().Address;
         return (myIp4Address, min, max);
     }
 }
