@@ -12,17 +12,16 @@ internal class PortBruteForceNatTraversal
 
     public PortBruteForceNatTraversal()
     {
-        receiver = new UdpClient
-        {
-            ExclusiveAddressUse = false
-        };
-        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        receiver = new UdpClient();
         receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
     }
 
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
+        /*destination = IPAddress.Parse("18.198.4.113");
+        maxPort = 14000 + (maxPort - minPort);
+        minPort = 14000;*/
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         _ = Task.Run(async () =>
@@ -40,11 +39,10 @@ internal class PortBruteForceNatTraversal
             }
         }, cancellationToken);
 
-        using var sender = new UdpClient();
-        sender.ExclusiveAddressUse = false;
-        sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        sender.Client.Bind(receiver.Client.LocalEndPoint!);
-        var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
+        using var sender = new UdpClient
+        {
+            Client = receiver.Client
+        };
         Console.WriteLine("Starting to punch holes");
 
         while (true)
