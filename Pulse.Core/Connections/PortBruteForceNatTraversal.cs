@@ -45,7 +45,7 @@ internal class PortBruteForceNatTraversal
         };
         Console.WriteLine("Starting to punch holes");
 
-        while (true) // TODO
+        for (var k = 0; k < 2; k++)
         {
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
@@ -70,6 +70,10 @@ internal class PortBruteForceNatTraversal
             }
             Console.WriteLine("loop");
         }
+        
+        await Task.Delay(5000, cancellationToken);
+        
+        throw new Exception("Could not establish connection ):");
     }
 
     private static void Sleep(TimeSpan duration)
@@ -96,22 +100,23 @@ internal class PortBruteForceNatTraversal
     public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(
         CancellationToken cancellationToken = default)
     {
-        var s1 = "stun.schlund.de";
-        var s2 = "stun.jumblo.com";
+        const string s1 = "stun.schlund.de";
+        const string s2 = "stun.jumblo.com";
 
-        var IPEndPoints = new List<IPEndPoint>();
-        
-        IPEndPoints.Add(await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
-        IPEndPoints.Add(await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
-        
-        var ports = IPEndPoints.Select(i => i.Port).ToList();
+        var ipEndPoints = new List<IPEndPoint>
+        {
+            await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken),
+            await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken)
+        };
 
-        Console.WriteLine(String.Join(",", IPEndPoints));
+        var ports = ipEndPoints.Select(i => i.Port).ToList();
+
+        Console.WriteLine(string.Join(",", ipEndPoints));
         var max = ports.Max();
         var min = ports.Min();
         min = Math.Max(min - 375, 1);
         max = Math.Min(max + 375, ushort.MaxValue);
-        var myIp4Address = IPEndPoints.First().Address;
+        var myIp4Address = ipEndPoints.First().Address;
         return (myIp4Address, min, max);
     }
 }
