@@ -3,7 +3,6 @@ using MudBlazor.Services;
 using Pulse.Client.Audio;
 using Pulse.Client.Authentication;
 using Pulse.Client.Calls;
-using Pulse.Client.Data;
 using Pulse.Core;
 
 namespace Pulse.Client;
@@ -22,7 +21,6 @@ public static class MauiProgram
         builder.Services.AddBlazorWebViewDeveloperTools();
 #endif
 
-        builder.Services.AddSingleton<WeatherForecastService>(); // TODO remove this.
         builder.Services.AddMudServices();
         builder.Services.AddPulse();
         builder.Services.AddSingleton<IAccessTokenProvider, HardCodedAccessTokenProvider>();
