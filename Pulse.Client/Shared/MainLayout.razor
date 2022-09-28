@@ -12,7 +12,15 @@
         <MudIconButton Icon="@Icons.Custom.Uncategorized.Radioactive" Color="Color.Inherit"/>
     </MudAppBar>
     <MudDrawer @bind-Open="@open">
-
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Pulse</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit">Dashboard</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.CallEnd" IconColor="Color.Inherit">Library</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.WifiCalling" IconColor="Color.Inherit">Community</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Speaker" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone test</MudNavLink>
+        </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
         @Body
