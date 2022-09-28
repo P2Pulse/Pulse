@@ -5,10 +5,12 @@
 @inject CurrentCallAccessor CallAccessor
 @inject NavigationManager NavManager
 
-<h3>Dial</h3>
-<MudTextField @bind-Value="username" Label="Username" HelperText="Who do you want to call?" Variant="Variant.Outlined"
-              Required="true" RequiredError="User name is required!"/>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Call" Disabled="@(username is null)">Call</MudButton>
+<div style="padding: 15px; text-align: center;">
+    <h3 style="margin-top: 50px">Who do you want to call?</h3>
+    <MudTextField @bind-Value="username" Placeholder="john_doe" HelperText="Enter the username of the person you want to call" 
+                  Variant="Variant.Outlined" style="margin-top: 10px" Immediate="true" />
+    <MudFab Style="margin-top: 10px" Color="Color.Primary" OnClick="Call" Disabled="@string.IsNullOrWhiteSpace(username)" Label="Call" StartIcon="@Icons.Material.Filled.Phone" />
+</div>
 
 
 @code {
