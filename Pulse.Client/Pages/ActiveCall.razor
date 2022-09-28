@@ -4,6 +4,7 @@
 @inject CurrentCallAccessor CallAccessor
 @inject Microphone Microphone
 @inject Speaker Speaker
+@inject NavigationManager NavigationManager
 
 <MudPaper Class="pa-4 ma-4" Height="85vh">
     <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
@@ -22,14 +23,13 @@
         {
             <p>@error</p> // TODO: remove this
         }
-        <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUp"></MudIconButton>
+        <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUpAsync"></MudIconButton>
     </MudStack>
 </MudPaper>
 
 @code {
     private Call CurrentCall => CallAccessor.CurrentCall!;
     private string? error;
-    private bool callHanged;
     private Stream? callAudioStream;
 
     protected override async Task OnInitializedAsync()
@@ -43,6 +43,8 @@
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
             microphoneRecording.Cancel();
+            
+            NavigationManager.NavigateTo("/");
         }
         catch (Exception e)
         {
@@ -50,12 +52,9 @@
         }
     }
 
-    private async Task HangUp()
+    private async Task HangUpAsync()
     {
         if (callAudioStream != null)
             await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
-
-        callHanged = true;
     }
-
 }
