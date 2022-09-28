@@ -77,6 +77,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 
 builder.Services.AddSingleton<InMemoryCallMatcher>();
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -96,6 +98,7 @@ builder.Services.AddAuthentication(options =>
     };
     options.RequireHttpsMetadata = false; // TODO: Set up certificates
 });
+
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
