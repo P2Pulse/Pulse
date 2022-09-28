@@ -1,13 +1,22 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory;
 using Pulse.Server.Contracts;
 
 namespace Pulse.Server.Core;
 
 public class InMemoryCallMatcher
 {
-    private readonly ConcurrentDictionary<string, PendingConnection> pendingConnections = new();
-    private readonly ConcurrentDictionary<string, byte[]> initializationVectors = new(); // TODO: IVs are never deleted so this only grows over time
+    private static readonly MemoryCacheEntryOptions CacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+    };
+    private readonly IMemoryCache cache;
+
+    public InMemoryCallMatcher(IMemoryCache cache)
+    {
+        this.cache = cache;
+    }
 
     public Task InitiateCallAsync(InitiateCallRequest request, string callerUsername)
     {
@@ -15,35 +24,39 @@ public class InMemoryCallMatcher
         // TODO: If A is calling B and B didn't answer yet, C can call B and fuck A's call.
         // TODO: Add a timeout to calls on the server side.
         var myTaskCompletionSource = new TaskCompletionSource<ConnectionDetails>();
-        pendingConnections[callerUsername] = new PendingConnection(IsIncoming: false, request.CalleeUserName, 
-            myTaskCompletionSource);
-        pendingConnections[request.CalleeUserName] = new PendingConnection(
-            IsIncoming: true, callerUsername, new TaskCompletionSource<ConnectionDetails>());
+        cache.Set(PendingConnectionKey(callerUsername), new PendingConnection(IsIncoming: false,
+            request.CalleeUserName, myTaskCompletionSource), CacheOptions);
+        cache.Set(PendingConnectionKey(request.CalleeUserName), new PendingConnection(
+            IsIncoming: true, callerUsername, new TaskCompletionSource<ConnectionDetails>()), CacheOptions);
 
         return myTaskCompletionSource.Task;
     }
-
-    public IncomingCall? PollForIncomingCall(string userName)
+    
+    public IncomingCall? PollForIncomingCall(string username)
     {
-        return pendingConnections.TryGetValue(userName, out var pendingConnection) && pendingConnection.IsIncoming
+        return TryGetPendingConnection(username, out var pendingConnection) && pendingConnection.IsIncoming
             ? new IncomingCall(pendingConnection.OtherUsername)
             : null;
     }
 
     public Task<ConnectionDetails> JoinCallAsync(JoinCallRequest request, string userName)
     {
-        if (!pendingConnections.TryGetValue(userName, out var myPendingConnection))
+        if (!TryGetPendingConnection(userName, out var myPendingConnection))
             throw new Exception("No pending call");
 
-        if (!pendingConnections.TryGetValue(myPendingConnection.OtherUsername, out var otherPersonConnection))
+        if (!TryGetPendingConnection(myPendingConnection.OtherUsername, out var otherPersonConnection))
         {
-            pendingConnections.Remove(userName, out _);
+            cache.Remove(PendingConnectionKey(userName));
             throw new Exception("Something went wrong in the initialization process. Make sure to only join a call " +
                                 "once you received a successful initiation response or a polling response.");
         }
 
         var callId = string.Join(',', new[] { userName, myPendingConnection.OtherUsername }.OrderBy(x => x));
-        var iv = initializationVectors.GetOrAdd(callId, _ => Aes.Create().IV);
+        var iv = cache.GetOrCreate($"initialization-vectors:{callId}", cacheEntry =>
+        {
+            cacheEntry.SetOptions(CacheOptions);
+            return Aes.Create().IV;
+        });
         
         var otherPersonConnectionDetails = new ConnectionDetails(request.IPAddress, request.MinPort, request.MaxPort, 
             request.PublicKey, iv);
@@ -52,9 +65,16 @@ public class InMemoryCallMatcher
 
         return myPendingConnection.ConnectionDetails.Task.ContinueWith(t =>
         {
-            pendingConnections.Remove(userName, out _);
+            cache.Remove(PendingConnectionKey(userName));
             return t.Result;
         });
+    }
+    
+    private static string PendingConnectionKey(string username) => $"pending-connections:{username}";
+
+    private bool TryGetPendingConnection(string username, [NotNullWhen(true)]out PendingConnection? pendingConnection)
+    {
+        return cache.TryGetValue<PendingConnection>(PendingConnectionKey(username), out pendingConnection);
     }
 
     private record PendingConnection(bool IsIncoming, string OtherUsername, TaskCompletionSource<ConnectionDetails> ConnectionDetails);
