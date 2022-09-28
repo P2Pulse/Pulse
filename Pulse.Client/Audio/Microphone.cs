@@ -10,7 +10,7 @@ public class Microphone
     {
         var buffer = new byte[320];
         
-        var recorder = new AudioRecord(AudioSource.Mic, sampleRateInHz: 16_000, ChannelIn.Mono,
+        var recorder = new AudioRecord(AudioSource.VoiceCommunication, sampleRateInHz: 16_000, ChannelIn.Mono,
             Encoding.Pcm16bit, buffer.Length);
         
         recorder.StartRecording();
