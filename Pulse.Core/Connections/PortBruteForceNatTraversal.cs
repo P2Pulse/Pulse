@@ -47,12 +47,8 @@ internal class PortBruteForceNatTraversal
         var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
         Console.WriteLine("Starting to punch holes");
 
-        var random = new Random();
-        var ttl = (short) random.Next(128, 256);
         while (true)
         {
-            sender.Ttl = ttl;
-
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
@@ -64,7 +60,7 @@ internal class PortBruteForceNatTraversal
                     {
                         var datagram = Encoding.ASCII.GetBytes("Knockout");
                         await receiver.SendAsync(datagram, cancellationToken);
-                        Sleep(TimeSpan.FromMilliseconds(0.5));
+                        Sleep(TimeSpan.FromMilliseconds(2.5));
                     }
                     
                     return new UdpChannel(receiver);
@@ -72,7 +68,7 @@ internal class PortBruteForceNatTraversal
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
                 await sender.SendAsync(message, endpoint, cancellationToken);
-                Sleep(TimeSpan.FromMilliseconds(0.2));
+                Sleep(TimeSpan.FromMilliseconds(15));
             }
             Console.WriteLine("loop");
         }
