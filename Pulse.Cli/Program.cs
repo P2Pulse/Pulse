@@ -32,6 +32,7 @@ if (answer == "i")
 }
 else
 {
+    File.Delete("output.wav");
     Console.WriteLine("Polling...");
     var poller = serviceProvider.GetRequiredService<IncomingCallPoller>();
     string? username = null;
