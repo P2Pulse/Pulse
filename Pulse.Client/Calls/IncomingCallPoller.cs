@@ -1,3 +1,4 @@
+using Pulse.Core.Authentication;
 using Pulse.Core.Calls;
 using CoreCallPoller = Pulse.Core.Calls.IncomingCallPoller;
 
@@ -8,13 +9,15 @@ public class IncomingCallPoller
     private readonly CoreCallPoller incomingCallPoller;
     private readonly CurrentCallAccessor callAccessor;
     private readonly ICallAcceptor callAcceptor;
+    private readonly IAccessTokenStorage accessTokenStorage;
 
     public IncomingCallPoller(CoreCallPoller incomingCallPoller, CurrentCallAccessor callAccessor, 
-        ICallAcceptor callAcceptor)
+        ICallAcceptor callAcceptor, IAccessTokenStorage accessTokenStorage)
     {
         this.incomingCallPoller = incomingCallPoller;
         this.callAccessor = callAccessor;
         this.callAcceptor = callAcceptor;
+        this.accessTokenStorage = accessTokenStorage;
 
         _ = PollForCallsAsync();
     }
@@ -26,6 +29,13 @@ public class IncomingCallPoller
         while (true)
         {
             await Task.Delay(250);
+            
+            if (accessTokenStorage.AccessToken is null)
+                continue;
+            
+            if (callAccessor.CurrentCall is not null) // TODO: make this null at the end of the call
+                continue;
+
             try
             {
                 var username = await incomingCallPoller.PollAsync();
@@ -42,7 +52,6 @@ public class IncomingCallPoller
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
         }
     }

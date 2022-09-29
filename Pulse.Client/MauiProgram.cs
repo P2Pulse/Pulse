@@ -4,6 +4,7 @@ using Pulse.Client.Audio;
 using Pulse.Client.Authentication;
 using Pulse.Client.Calls;
 using Pulse.Core;
+using Pulse.Core.Authentication;
 
 namespace Pulse.Client;
 
@@ -23,16 +24,9 @@ public static class MauiProgram
 
         builder.Services.AddMudServices();
         builder.Services.AddPulse();
-        builder.Services.AddSingleton<IAccessTokenProvider, HardCodedAccessTokenProvider>();
+        builder.Services.AddSingleton<IAccessTokenStorage, SecureAccessTokenStorage>();
 
-        const string serverHttpClient = "Pulse.Server";
-        builder.Services.AddHttpClient(serverHttpClient, (services, client) =>
-        {
-            client.BaseAddress = new Uri("https://pulse.gurgaller.com");
-            var accessToken = services.GetRequiredService<IAccessTokenProvider>().AccessToken;
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        });
-        builder.Services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
+        builder.Services.AddSingleton(SecureStorage.Default);
 
         builder.Services.AddSingleton<CurrentCallAccessor>();
 
