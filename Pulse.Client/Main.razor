@@ -1,6 +1,9 @@
 ﻿@using Pulse.Client.Calls
+@using Android.Content
+@using Android.App
 @inject IncomingCallPoller IncomingCallPoller
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 
 <Router AppAssembly="@typeof(Main).Assembly">
 	<Found Context="routeData">
@@ -16,8 +19,26 @@
 
 @code
 {
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
 		IncomingCallPoller.OnIncomingCall += () => NavigationManager.NavigateTo("/ActiveCall");
+		var permissionStatus = await Permissions.RequestAsync<Permissions.Microphone>();
+		if (permissionStatus != PermissionStatus.Granted)
+		{
+			await DialogService.ShowMessageBox("Missing Microphone Permission", 
+				$"In order to use {nameof(Pulse)}, you must give the app permission to access your phone's microphone.", 
+				yesText: "Open Settings");
+
+			OpenAppSettings();
+		}
+	}
+	
+	private void OpenAppSettings()
+	{
+		var intent = new Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
+		intent.AddFlags(ActivityFlags.NewTask);
+		var uri = Android.Net.Uri.FromParts("package", "com.company.pulse", null);
+		intent.SetData(uri);
+		Application.Context.StartActivity(intent);
 	}
 }
