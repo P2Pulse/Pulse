@@ -1,0 +1,37 @@
+﻿<MudAvatar Style="@($"background-color: {Color};width: 150px; height: 150px; font-size:5rem;")">@Username[0].ToString().ToUpper()</MudAvatar>
+
+@code {
+    private static readonly List<Type> ColorClasses = typeof(Colors).GetNestedTypes().OrderBy(t => t.Name).ToList();
+    
+    [Parameter, EditorRequired]
+    public string Username { get; set; } = default!;
+
+    private string Color
+    {
+        get
+        {
+            var chosenColorClass = ColorClasses[Math.Abs(GetDeterministicHashCode(Username)) % ColorClasses.Count];
+            return (string)chosenColorClass.GetProperty(nameof(Colors.Amber.Default))!.GetValue(obj: null)!;
+        }
+    }
+    
+    // System.String.GetHashCode uses randomization in recent .NET versions
+    private static int GetDeterministicHashCode(string str)
+    {
+        unchecked
+        {
+            var hash1 = (5381 << 16) + 5381;
+            var hash2 = hash1;
+
+            for (var i = 0; i < str.Length; i += 2)
+            {
+                hash1 = ((hash1 << 5) + hash1) ^ str[i];
+                if (i == str.Length - 1)
+                    break;
+                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+            }
+
+            return hash1 + (hash2 * 1566083941);
+        }
+    }
+}

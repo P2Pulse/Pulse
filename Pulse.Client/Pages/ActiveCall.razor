@@ -11,7 +11,7 @@
 
 <MudPaper Class="pa-4 ma-4" Height="85vh">
     <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
-        <MudAvatar Color="Color.Primary" Size="Size.Large">@CurrentCall.OtherUser[0].ToString().ToUpper()</MudAvatar>
+        <Avatar Username="@CurrentCall.OtherUser" />
         <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
         @if (!CurrentCall.Connection.IsCompleted)
         {
