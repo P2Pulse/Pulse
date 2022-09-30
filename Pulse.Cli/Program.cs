@@ -1,17 +1,12 @@
-﻿using System.Net.Http.Headers;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Pulse.Cli;
 using Pulse.Core;
+using Pulse.Core.Authentication;
 using Pulse.Core.Calls;
 
 var services = new ServiceCollection();
-const string serverHttpClient = "Pulse.Server";
-services.AddHttpClient(serverHttpClient, client =>
-{
-    client.BaseAddress = new Uri("https://pulse.gurgaller.com");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzkzNTY3OSwiZXhwIjoxNjY0NTQwNDc5LCJpYXQiOjE2NjM5MzU2Nzl9.eIrF51xJl0hh817vTJOjY7Olrpp8mwTMhUsDLj-lhDM");
-});
-services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
+const string myToken = "MY_TOKEN";
+services.AddSingleton<IAccessTokenStorage>(new ImmutableAccessTokenStorage(myToken));
 services.AddPulse();
 
 var serviceProvider = services.BuildServiceProvider();

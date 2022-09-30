@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Pulse.Core.Authentication
+@inherits LayoutComponentBase
+@inject IAccessTokenStorage AccessTokenStorage
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider IsDarkMode="true"/>
 <MudDialogProvider/>
@@ -11,15 +14,21 @@
         <MudSpacer/>
         <MudIconButton Icon="@Icons.Custom.Uncategorized.Radioactive" Color="Color.Inherit"/>
     </MudAppBar>
-    <MudDrawer @bind-Open="@open">
+    <MudDrawer @bind-Open="@drawerOpen">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">Pulse</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit">Dashboard</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.CallEnd" IconColor="Color.Inherit">Library</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.WifiCalling" IconColor="Color.Inherit">Community</MudNavLink>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Speaker" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone test</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Speaker" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone test (REMOVE ME)</MudNavLink>
+            @if (AccessTokenStorage.AccessToken is null)
+            {
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Login" IconColor="Color.Inherit" Href="/Login">Log In / Sign Up</MudNavLink>
+            }
+            else
+            {
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit" Href="/">Dial</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Logout" IconColor="Color.Inherit" OnClick="LogOutAsync">Log Out</MudNavLink>
+            }
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -30,10 +39,31 @@
 
 @code
 {
-    private bool open;
+    private bool drawerOpen;
 
-    void ToggleDrawer()
+    protected override void OnInitialized()
     {
-        open = !open;
+        RedirectToLoginPageIfNecessary();
+
+        AccessTokenStorage.OnTokenChange += RedirectToLoginPageIfNecessary;
+    }
+
+    private void RedirectToLoginPageIfNecessary()
+    {
+        if (AccessTokenStorage.AccessToken is not null || new Uri(NavigationManager.Uri).PathAndQuery.StartsWith("Login")) 
+            return;
+        
+        NavigationManager.NavigateTo("/Login");
+        drawerOpen = false;
+    }
+
+    private void ToggleDrawer()
+    {
+        drawerOpen = !drawerOpen;
+    }
+
+    private async Task LogOutAsync()
+    {
+        await AccessTokenStorage.RemoveTokenAsync();
     }
 }
