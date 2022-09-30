@@ -14,7 +14,7 @@ public class Call : IAsyncDisposable
     
     public async ValueTask DisposeAsync()
     {
-        await IncomingAudio.DisposeAsync();
-        await OutgoingAudio.DisposeAsync();
+        await IncomingAudio.DisposeAsync().ConfigureAwait(false);
+        await OutgoingAudio.DisposeAsync().ConfigureAwait(false);
     }
 }

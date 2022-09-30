@@ -15,7 +15,7 @@ internal class UdpStreamFactory
         var portBruteForcer = new PortBruteForceNatTraversal();
         var (myIPv4Address, min, max) = await portBruteForcer.PredictMinMaxPortsAsync(
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         var packetEncryptor = new PacketEncryptor();
         var myInfo = new JoinCallRequest(
@@ -25,7 +25,7 @@ internal class UdpStreamFactory
             packetEncryptor.PublicKey
         );
 
-        var connectionInfo = await exchangeConnectionInfo(myInfo);
+        var connectionInfo = await exchangeConnectionInfo(myInfo).ConfigureAwait(false);
         // print connectionInfo to console
         Console.WriteLine("Connection info:");
         Console.WriteLine(connectionInfo);
@@ -35,7 +35,7 @@ internal class UdpStreamFactory
             connectionInfo.MinPort,
             connectionInfo.MaxPort,
             cancellationToken
-        );
+        ).ConfigureAwait(false);
 
         packetEncryptor.SetAesIV(connectionInfo.IV!);
         packetEncryptor.SetOtherPartyPublicKey(connectionInfo.PublicKey);

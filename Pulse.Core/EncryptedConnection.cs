@@ -24,8 +24,8 @@ internal class EncryptedConnection : IConnection
 
     public async Task SendPacketAsync(Packet packet, CancellationToken cancellationToken)
     {
-        var encryptedPacket = await encryptor.EncryptAsync(packet);
-        await actualConnection.SendPacketAsync(encryptedPacket, cancellationToken);
+        var encryptedPacket = await encryptor.EncryptAsync(packet).ConfigureAwait(false);
+        await actualConnection.SendPacketAsync(encryptedPacket, cancellationToken).ConfigureAwait(false);
     }
 
     private class CryptoPacketChannelReader : ChannelReader<Packet>

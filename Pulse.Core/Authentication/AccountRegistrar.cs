@@ -18,12 +18,12 @@ public class AccountRegistrar
         {
             UserName = username,
             Password = password
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode)
             return new AuthenticationResult(Succeeded: true, Errors: ImmutableList<string>.Empty);
 
-        var errorResponses = await response.Content.ReadFromJsonAsync<ErrorResponse[]>(cancellationToken: cancellationToken);
+        var errorResponses = await response.Content.ReadFromJsonAsync<ErrorResponse[]>(cancellationToken: cancellationToken).ConfigureAwait(false);
         var errors = errorResponses!.Select(e => e.Description).ToImmutableList();
         return new AuthenticationResult(Succeeded: false, errors);
     }

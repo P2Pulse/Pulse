@@ -24,7 +24,7 @@ internal class UdpChannel : IConnection
         
         while (!cancellationToken.IsCancellationRequested)
         {
-            var message = await udpClient.ReceiveAsync(cancellationToken);
+            var message = await udpClient.ReceiveAsync(cancellationToken).ConfigureAwait(false);
             
             var textualContent = Encoding.ASCII.GetString(message.Buffer);
             if (textualContent.StartsWith("Knockout") || textualContent.StartsWith("Punch!"))
@@ -32,7 +32,7 @@ internal class UdpChannel : IConnection
 
             var packet = PacketEncoder.Decode(message.Buffer);
 
-            await channel.Writer.WriteAsync(packet, cancellationToken);
+            await channel.Writer.WriteAsync(packet, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -43,8 +43,8 @@ internal class UdpChannel : IConnection
         try
         {
             var messageContent = PacketEncoder.Encode(packet);
-            await udpClient.SendAsync(messageContent, cancellationToken);
-            await Task.Delay(8, cancellationToken); // TODO - delete this
+            await udpClient.SendAsync(messageContent, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(8, cancellationToken).ConfigureAwait(false); // TODO - delete this
         }
         catch (ObjectDisposedException e)
         {

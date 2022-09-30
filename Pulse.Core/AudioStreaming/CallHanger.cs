@@ -21,7 +21,7 @@ internal class CallHanger : IConnection
 
     public async Task SendPacketAsync(Packet packet, CancellationToken cancellationToken)
     {
-        await actualConnection.SendPacketAsync(packet, cancellationToken);
+        await actualConnection.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
     }
 
     private class CallHangerChannelReader : ChannelReader<Packet>
@@ -49,11 +49,11 @@ internal class CallHanger : IConnection
                 {
                     Console.WriteLine("Assuming connection lost, hanging up.");
                     connectionLost = true;
-                    await callHanger.DisposeAsync();
+                    await callHanger.DisposeAsync().ConfigureAwait(false);
                     break;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), ct);
+                await Task.Delay(TimeSpan.FromSeconds(1), ct).ConfigureAwait(false);
             }
         }
 
@@ -88,7 +88,7 @@ internal class CallHanger : IConnection
     {
         cancellationTokenSource.Cancel();
         // send a hangup packet
-        await actualConnection.SendPacketAsync(new Packet(int.MaxValue, new byte[420]), CancellationToken.None);
-        await actualConnection.DisposeAsync();
+        await actualConnection.SendPacketAsync(new Packet(int.MaxValue, new byte[420]), CancellationToken.None).ConfigureAwait(false);
+        await actualConnection.DisposeAsync().ConfigureAwait(false);
     }
 }

@@ -34,7 +34,7 @@ internal class PacketStream : Stream
 
         while (destination.Length > bytesRead)
         {
-            var packet = await GetNextPacketAsync(cancellationToken);
+            var packet = await GetNextPacketAsync(cancellationToken).ConfigureAwait(false);
             if (packet is null)
                 return bytesRead;
             
@@ -56,7 +56,7 @@ internal class PacketStream : Stream
     {
         try
         {
-            return await connection.IncomingAudio.ReadAsync(cancellationToken);
+            return await connection.IncomingAudio.ReadAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (ChannelClosedException)
         {
@@ -73,7 +73,7 @@ internal class PacketStream : Stream
     {
         var serialNumber = Interlocked.Increment(ref lastSentPacket);
         var packet = new Packet(serialNumber, buffer);
-        await connection.SendPacketAsync(packet, cancellationToken);
+        await connection.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
     }
 
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

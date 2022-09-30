@@ -21,19 +21,19 @@ public class Authenticator
         {
             UserName = username,
             Password = password
-        }, cancellationToken);
+        }, cancellationToken).ConfigureAwait(false);
 
         if (response.IsSuccessStatusCode)
         {
             var responseContent = await response.Content.ReadFromJsonAsync<SuccessfulAuthenticationResponse>(
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            await tokenStorage.StoreAsync(responseContent!.AccessToken, cancellationToken);
+            await tokenStorage.StoreAsync(responseContent!.AccessToken, cancellationToken).ConfigureAwait(false);
             
             return new AuthenticationResult(Succeeded: true, Errors: ImmutableList<string>.Empty);
         }
 
-        var errorResponses = await response.Content.ReadFromJsonAsync<ErrorResponse[]>(cancellationToken: cancellationToken);
+        var errorResponses = await response.Content.ReadFromJsonAsync<ErrorResponse[]>(cancellationToken: cancellationToken).ConfigureAwait(false);
         var errors = errorResponses!.Select(e => e.Description).ToImmutableList();
         return new AuthenticationResult(Succeeded: false, errors);
     }
