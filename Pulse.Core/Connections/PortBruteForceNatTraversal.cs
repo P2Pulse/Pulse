@@ -45,14 +45,15 @@ internal class PortBruteForceNatTraversal
         };
         Console.WriteLine("Starting to punch holes");
 
-        for (var k = 0; k < 2; k++)
+        for (var k = 0; k < 3; k++)
         {
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
                 if (connectionInitiated)
                 {
-                    sender.Client = null;  // Prevents closing the socket when disposing the client because we are using the same socket for both sending and receiving
+                    sender.Client =
+                        null; // Prevents closing the socket when disposing the client because we are using the same socket for both sending and receiving
                     await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
                     for (var i = 0; i < 20; i++)
                     {
@@ -60,7 +61,7 @@ internal class PortBruteForceNatTraversal
                         await receiver.SendAsync(datagram, cancellationToken);
                         Sleep(TimeSpan.FromMilliseconds(2.5));
                     }
-                    
+
                     return new UdpChannel(receiver);
                 }
 
@@ -68,11 +69,17 @@ internal class PortBruteForceNatTraversal
                 await sender.SendAsync(message, endpoint, cancellationToken);
                 Sleep(TimeSpan.FromMilliseconds(7));
             }
+
             Console.WriteLine("loop");
+            if (k == 1)
+            {
+                Console.WriteLine("Waiting a little before third round to let the other party punch the NAT.");
+                await Task.Delay(2000, cancellationToken);
+            }
         }
-        
+
         await Task.Delay(5000, cancellationToken);
-        
+
         throw new Exception("Could not establish connection ):");
     }
 
@@ -113,12 +120,12 @@ internal class PortBruteForceNatTraversal
 
         Console.WriteLine(string.Join(",", ipEndPoints));
         var myIp4Address = ipEndPoints.First().Address;
-        
+
         var max = ports.Max();
         var min = ports.Min();
-        if (min == max)  // in case it's not a symmetric NAT
+        if (min == max) // in case it's not a symmetric NAT
             return (myIp4Address, min, max);
-        
+
         min = Math.Max(min - 375, 1);
         max = Math.Min(max + 375, ushort.MaxValue);
         return (myIp4Address, min, max);
