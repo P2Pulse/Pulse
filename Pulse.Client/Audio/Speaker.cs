@@ -22,7 +22,7 @@ public class Speaker
         audioTrack.Play();
         
         var aec = AcousticEchoCanceler.Create(sessionId);
-        aec.SetEnabled(true);
+        aec?.SetEnabled(true);
         
         int bytesRead;
         while ((bytesRead = await stream.ReadAsync(buffer)) != 0)
