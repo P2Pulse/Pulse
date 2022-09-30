@@ -28,7 +28,7 @@ internal class PortBruteForceNatTraversal
         {
             try
             {
-                var message = await receiver.ReceiveAsync(cancellationToken);
+                var message = await receiver.ReceiveAsync(cancellationToken).ConfigureAwait(false);
                 Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                 messageRemoteEndPoint = message.RemoteEndPoint;
                 connectionInitiated = true;
@@ -50,7 +50,7 @@ internal class PortBruteForceNatTraversal
             if (k >= 2)
             {
                 Console.WriteLine("Waiting a little before the next rounds to let the other party punch the NAT.");
-                await Task.Delay(1000 * k, cancellationToken);
+                await Task.Delay(1000 * k, cancellationToken).ConfigureAwait(false);
             }
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
@@ -59,11 +59,11 @@ internal class PortBruteForceNatTraversal
                 {
                     sender.Client =
                         null; // Prevents closing the socket when disposing the client because we are using the same socket for both sending and receiving
-                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
+                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken).ConfigureAwait(false);
                     for (var i = 0; i < 20; i++)
                     {
                         var datagram = Encoding.ASCII.GetBytes("Knockout");
-                        await receiver.SendAsync(datagram, cancellationToken);
+                        await receiver.SendAsync(datagram, cancellationToken).ConfigureAwait(false);
                         Sleep(TimeSpan.FromMilliseconds(2.5));
                     }
 
@@ -71,7 +71,7 @@ internal class PortBruteForceNatTraversal
                 }
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
-                await sender.SendAsync(message, endpoint, cancellationToken);
+                await sender.SendAsync(message, endpoint, cancellationToken).ConfigureAwait(false);
                 Sleep(TimeSpan.FromMilliseconds(7));
             }
 
@@ -93,12 +93,12 @@ internal class PortBruteForceNatTraversal
     {
         while (true)
         {
-            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
+            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken).ConfigureAwait(false)).First();
             var server = new IPEndPoint(serverIp, 3478);
-            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
+            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP).ConfigureAwait(false);
             if (result?.PublicEndPoint is not null)
                 return result.PublicEndPoint;
-            await Task.Delay(50, cancellationToken);
+            await Task.Delay(50, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -110,8 +110,8 @@ internal class PortBruteForceNatTraversal
 
         var ipEndPoints = new List<IPEndPoint>
         {
-            await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken),
-            await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken)
+            await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken).ConfigureAwait(false),
+            await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken).ConfigureAwait(false)
         };
 
         var ports = ipEndPoints.Select(i => i.Port).ToList();

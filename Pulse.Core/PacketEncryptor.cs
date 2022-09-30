@@ -51,7 +51,7 @@ internal class PacketEncryptor : IDisposable
 
         var encryptor = aes.CreateEncryptor();
 
-        var encryptedContent = await CryptoTransformAsync(packet.Content, encryptor);
+        var encryptedContent = await CryptoTransformAsync(packet.Content, encryptor).ConfigureAwait(false);
         return packet with { Content = encryptedContent.ToArray() };
     }
 
@@ -68,7 +68,7 @@ internal class PacketEncryptor : IDisposable
 
         var decryptor = aes.CreateDecryptor();
 
-        var decryptedContent = await CryptoTransformAsync(encryptedPacket.Content, decryptor);
+        var decryptedContent = await CryptoTransformAsync(encryptedPacket.Content, decryptor).ConfigureAwait(false);
         return encryptedPacket with { Content = decryptedContent.ToArray() };
     }
 
@@ -83,8 +83,8 @@ internal class PacketEncryptor : IDisposable
             cryptoTransformer,
             CryptoStreamMode.Write
         );
-        await cs.WriteAsync(data);
-        await cs.FlushFinalBlockAsync();
+        await cs.WriteAsync(data).ConfigureAwait(false);
+        await cs.FlushFinalBlockAsync().ConfigureAwait(false);
         return dataStream;
     }
 

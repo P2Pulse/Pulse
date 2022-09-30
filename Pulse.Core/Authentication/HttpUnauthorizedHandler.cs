@@ -14,10 +14,10 @@ internal class HttpUnauthorizedHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, 
         CancellationToken cancellationToken)
     {
-        var response = await base.SendAsync(request, cancellationToken);
+        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         
         if (response.StatusCode is HttpStatusCode.Unauthorized)
-            await accessTokenStorage.RemoveTokenAsync(cancellationToken);
+            await accessTokenStorage.RemoveTokenAsync(cancellationToken).ConfigureAwait(false);
         
         return response;
     }

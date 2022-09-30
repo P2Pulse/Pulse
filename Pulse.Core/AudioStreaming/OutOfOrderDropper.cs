@@ -21,7 +21,7 @@ internal class OutOfOrderDropper : IConnection
 
     public async Task SendPacketAsync(Packet packet, CancellationToken cancellationToken)
     {
-        await actualConnection.SendPacketAsync(packet, cancellationToken);
+        await actualConnection.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
     }
 
     private class PacketDroppingChannelReader : ChannelReader<Packet>

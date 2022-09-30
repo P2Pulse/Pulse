@@ -20,17 +20,17 @@ internal class UdpCallAcceptor : ICallAcceptor
         return await connectionFactory.ConnectAsync(async myInfo =>
         {
             Console.WriteLine("Answering call...");
-            var response = await httpClient.PostAsJsonAsync(Endpoint, myInfo, ct);
+            var response = await httpClient.PostAsJsonAsync(Endpoint, myInfo, ct).ConfigureAwait(false);
             try
             {
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception e)
             {
-                throw new Exception(await response.Content.ReadAsStringAsync(ct), e);
+                throw new Exception(await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false), e);
             }
 
-            return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct))!;
-        }, ct);
+            return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
+        }, ct).ConfigureAwait(false);
     }
 }

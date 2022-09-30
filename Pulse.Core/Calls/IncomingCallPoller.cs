@@ -17,14 +17,14 @@ public class IncomingCallPoller
 
     public async Task<string?> PollAsync(CancellationToken ct = default)
     {
-        var pollingResponse = await httpClient.GetAsync(Endpoint, cancellationToken: ct);
+        var pollingResponse = await httpClient.GetAsync(Endpoint, cancellationToken: ct).ConfigureAwait(false);
 
         if (pollingResponse.StatusCode is HttpStatusCode.NotFound)
             return null;
 
         pollingResponse.EnsureSuccessStatusCode();
 
-        var incomingCall = await pollingResponse.Content.ReadFromJsonAsync<IncomingCall>(cancellationToken: ct);
+        var incomingCall = await pollingResponse.Content.ReadFromJsonAsync<IncomingCall>(cancellationToken: ct).ConfigureAwait(false);
         var callerUsername = incomingCall!.Username;
         Console.WriteLine("Call from: " + callerUsername);
         return callerUsername;
