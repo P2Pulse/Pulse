@@ -71,7 +71,7 @@ internal class PortBruteForceNatTraversal
             Console.WriteLine("loop");
         }
         
-        await Task.Delay(2250, cancellationToken);
+        await Task.Delay(5000, cancellationToken);
         
         throw new Exception("Could not establish connection ):");
     }
