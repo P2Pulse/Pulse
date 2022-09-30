@@ -50,8 +50,9 @@ internal class PortBruteForceNatTraversal
             if (k != 0)
             {
                 Console.WriteLine("Waiting a little before the next rounds to let the other party punch the NAT.");
-                await Task.Delay(1000 * k, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(1250 * k, cancellationToken).ConfigureAwait(false);
             }
+
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
