@@ -14,6 +14,7 @@ public static class Emojis
             throw new ArgumentException("bytes length must be 32");
 
         var emojisCount = emojis.Length;
+        // NOTE: we are taking only the first 24 bytes of the hash! (192 bits)
         var bytesAsInts = Enumerable.Range(0, 6).Select(i => bytes[i..(i + 5)]);  // weak in comparison to the full hash, but still good for this project
 
         return bytesAsInts.Select(bytesAsInt => BitConverter.ToInt32(bytesAsInt)).Select(num => emojis[num % emojisCount]).ToArray();
