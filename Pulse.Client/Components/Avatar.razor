@@ -1,4 +1,4 @@
-﻿<MudAvatar Style="@($"background-color: {Color};width: 150px; height: 150px; font-size:5rem;")">@Username[0].ToString().ToUpper()</MudAvatar>
+﻿<MudAvatar Style="@($"background-color: {Color};width: 120px; height: 120px; font-size:4.5rem;")">@Username[0].ToString().ToUpper()</MudAvatar>
 
 @code {
     private static readonly List<Type> ColorClasses = typeof(Colors).GetNestedTypes().OrderBy(t => t.Name).ToList();
