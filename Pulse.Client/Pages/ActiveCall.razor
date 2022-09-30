@@ -1,6 +1,9 @@
 ﻿@page "/ActiveCall"
 @using Pulse.Client.Calls
 @using Pulse.Client.Audio
+@using Android.Media
+@using Stream = System.IO.Stream
+@using Android.Content
 @inject CurrentCallAccessor CallAccessor
 @inject Microphone Microphone
 @inject Speaker Speaker
@@ -23,7 +26,13 @@
         {
             <p>@error</p> // TODO: remove this
         }
-        <MudIconButton Icon="@Icons.Filled.Phone" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUpAsync"></MudIconButton>
+        <MudIconButton Icon="@Icons.Filled.CallEnd" Color="Color.Error" Variant="Variant.Outlined" aria-label="hangup" OnClick="HangUpAsync"></MudIconButton>
+        <MudToggleIconButton Icon="@Icons.Material.Filled.Campaign"
+                             Toggled="@speakerOn"
+                             ToggledChanged="ToggleSpeaker"
+                             Color="@Color.Dark" Title="Off"
+                             ToggledIcon="@Icons.Material.Outlined.Campaign" ToggledColor="@Color.Dark"
+                             ToggledTitle="On"/>
     </MudStack>
 </MudPaper>
 
@@ -31,6 +40,7 @@
     private Call CurrentCall => CallAccessor.CurrentCall!;
     private string? error;
     private Stream? callAudioStream;
+    private bool speakerOn;
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,7 +53,7 @@
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
             microphoneRecording.Cancel();
-            
+
             NavigationManager.NavigateTo("/");
         }
         catch (Exception e)
@@ -56,6 +66,15 @@
     {
         if (callAudioStream != null)
             await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
-        // todo: not working
+    // todo: not working
     }
+
+    private void ToggleSpeaker()
+    {
+        speakerOn = !speakerOn;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.SpeakerphoneOn = speakerOn;
+    }
+
 }
