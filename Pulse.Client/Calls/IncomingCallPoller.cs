@@ -48,7 +48,6 @@ public class IncomingCallPoller
                 
                 // TODO: ask user if they want to accept the call
                 OnIncomingCall?.Invoke();
-
             }
             catch (Exception e)
             {
