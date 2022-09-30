@@ -9,7 +9,7 @@ public class Speaker
 {
     private const int BufferLength = 320;
 
-    public async Task PlayAsync(Stream stream, int sessionId)
+    public async Task PlayAsync(Stream stream)
     {
         var audioAttributes = new AudioAttributes.Builder().SetContentType(AudioContentType.Speech)?.SetUsage(AudioUsageKind.VoiceCommunication)?.Build();
         var audioFormat = new AudioFormat.Builder()
@@ -17,12 +17,9 @@ public class Speaker
             .SetSampleRate(16_000)?
             .SetChannelMask(ChannelOut.Mono).Build();
 
-        var audioTrack = new AudioTrack(audioAttributes, audioFormat, bufferSizeInBytes: BufferLength, AudioTrackMode.Stream, sessionId);
+        var audioTrack = new AudioTrack(audioAttributes, audioFormat, bufferSizeInBytes: BufferLength, AudioTrackMode.Stream, 0);
         var buffer = new byte[BufferLength];
         audioTrack.Play();
-        
-        var aec = AcousticEchoCanceler.Create(sessionId);
-        aec?.SetEnabled(true);
         
         int bytesRead;
         while ((bytesRead = await stream.ReadAsync(buffer)) != 0)

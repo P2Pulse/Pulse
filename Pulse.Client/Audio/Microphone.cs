@@ -9,14 +9,11 @@ public class Microphone
 {
     private readonly AudioRecord recorder;
     private const int BufferLength = 320;
-
-    public int audioSessionId { get; }
-
+    
     public Microphone()
     {
         recorder = new AudioRecord(AudioSource.VoiceCommunication, sampleRateInHz: 16_000, ChannelIn.Mono,
             Encoding.Pcm16bit, BufferLength);
-        audioSessionId = recorder.AudioSessionId;
     }
 
 
