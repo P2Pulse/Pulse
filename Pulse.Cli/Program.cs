@@ -21,8 +21,9 @@ if (answer == "i")
     var callee = Console.ReadLine();
     Console.WriteLine("Calling...");
     var callInitiator = serviceProvider.GetRequiredService<ICallInitiator>();
-    var audioStream = await callInitiator.CallAsync(callee!);
-    
+    var call = await callInitiator.CallAsync(callee!);
+    await using var audioStream = call.Stream;
+
     await using var fileStream = File.Create("output.wav");
     await using var file = File.OpenRead("music.wav");
     
@@ -42,7 +43,8 @@ else
     }
     Console.WriteLine($"Incoming call from {username}");
     var callAcceptor = serviceProvider.GetRequiredService<ICallAcceptor>();
-    await using var stream = await callAcceptor.AnswerCallAsync();
+    var call = await callAcceptor.AnswerCallAsync();
+    await using var stream = call.Stream;
     await using var fileStream = File.Create("output.wav");
     await stream.CopyToAsync(fileStream);
 }

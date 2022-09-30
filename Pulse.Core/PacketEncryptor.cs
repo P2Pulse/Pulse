@@ -88,6 +88,17 @@ internal class PacketEncryptor : IDisposable
         return dataStream;
     }
 
+    public byte[] CalculateCredentialsHash()
+    {
+        if (!Ready)
+            throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
+
+        using var sha256 = SHA256.Create();
+        var sharedKeyHash = sha256.ComputeHash(sharedKey);
+        var ivHash = sha256.ComputeHash(aesIV);
+        return sha256.ComputeHash(sharedKeyHash.Concat(ivHash).ToArray());
+    }
+
     private static byte[] CalculateIV(byte[] iv, int serialNumber)
     {
         var serialNumberAsBytes = BitConverter.GetBytes(serialNumber);
@@ -96,4 +107,5 @@ internal class PacketEncryptor : IDisposable
             .Concat(iv[sizeof(int)..])
             .ToArray();
     }
+    
 }

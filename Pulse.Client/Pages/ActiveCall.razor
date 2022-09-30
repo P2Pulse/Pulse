@@ -46,7 +46,7 @@
     {
         try
         {
-            await using var audioStream = await CurrentCall.Connection;
+            await using var audioStream = (await CurrentCall.Connection).Stream;
             StateHasChanged();
             callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();

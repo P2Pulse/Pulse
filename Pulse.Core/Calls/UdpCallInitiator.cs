@@ -15,7 +15,7 @@ internal class UdpCallInitiator : ICallInitiator
         this.connectionFactory = connectionFactory;
     }
 
-    public async Task<Stream> CallAsync(string username, CancellationToken ct = default)
+    public async Task<Call> CallAsync(string username, CancellationToken ct = default)
     {
         var initiationResponse = await httpClient.PostAsJsonAsync(Endpoint, new InitiateCallRequest(username), ct).ConfigureAwait(false);
         try
@@ -27,7 +27,7 @@ internal class UdpCallInitiator : ICallInitiator
             throw new Exception(await initiationResponse.Content.ReadAsStringAsync(ct).ConfigureAwait(false), e);
         }
 
-        return await connectionFactory.ConnectAsync(async myInfo =>
+        var encryptedStream = await connectionFactory.ConnectAsync(async myInfo =>
         {
             var response = await httpClient.PostAsJsonAsync(Endpoint + "/join", myInfo, ct).ConfigureAwait(false);
             try
@@ -43,5 +43,7 @@ internal class UdpCallInitiator : ICallInitiator
 
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
         }, ct).ConfigureAwait(false);
+
+        return new Call(encryptedStream.Stream, encryptedStream.CredentialsHash);
     }
 }

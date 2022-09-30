@@ -47,7 +47,7 @@ internal class PortBruteForceNatTraversal
 
         for (var k = 0; k < 4; k++)
         {
-            if (k >= 2)
+            if (k != 0)
             {
                 Console.WriteLine("Waiting a little before the next rounds to let the other party punch the NAT.");
                 await Task.Delay(1000 * k, cancellationToken).ConfigureAwait(false);
