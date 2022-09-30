@@ -9,14 +9,14 @@ public class Speaker
     public async Task PlayAsync(Stream stream)
     {
         var buffer = new byte[320];
-        
-        var audioTrack = new AudioTrack(AndroidStream.VoiceCall, sampleRateInHz: 16_000, ChannelOut.Mono, Encoding.Pcm16bit, 
+
+        var audioTrack = new AudioTrack(AndroidStream.VoiceCall, sampleRateInHz: 16_000, ChannelOut.Mono, Encoding.Pcm16bit,
             buffer.Length, AudioTrackMode.Stream);
-        
+
         audioTrack.Play();
 
         int bytesRead;
-        while ((bytesRead = await stream.ReadAsync(buffer)) != 0) 
+        while ((bytesRead = await stream.ReadAsync(buffer)) != 0)
             await audioTrack.WriteAsync(buffer, 0, bytesRead);
     }
 }
