@@ -9,14 +9,11 @@ public class Microphone
 {
     private readonly AudioRecord recorder;
     private const int BufferLength = 320;
-
-    public int audioSessionId { get; }
-
+    
     public Microphone()
     {
         recorder = new AudioRecord(AudioSource.VoiceCommunication, sampleRateInHz: 16_000, ChannelIn.Mono,
             Encoding.Pcm16bit, BufferLength);
-        audioSessionId = recorder.AudioSessionId;
     }
 
 
@@ -29,5 +26,10 @@ public class Microphone
             var read = await recorder.ReadAsync(buffer, 0, buffer.Length);
             await streamToWriteTo.WriteAsync(buffer, 0, read, ct);
         }
+    }
+    
+    public void StopRecording()
+    {
+        recorder.Stop();
     }
 }

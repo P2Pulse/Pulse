@@ -24,7 +24,7 @@
         _ = microphone.RecordAsync(stream, ctx.Token);
         await Task.Delay(6000);
         stream.Position = 0;
-        await speaker.PlayAsync(stream, microphone.audioSessionId);
+        await speaker.PlayAsync(stream);
         ctx.Cancel();
     }
 
