@@ -1,3 +1,5 @@
-﻿namespace Pulse.Client.Calls;
+﻿using CoreCall = Pulse.Core.Calls.Call;
 
-public record Call(string OtherUser, Task<Stream> Connection);
+namespace Pulse.Client.Calls;
+
+public record Call(string OtherUser, Task<CoreCall> Connection);

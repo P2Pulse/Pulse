@@ -1,4 +1,6 @@
-﻿namespace Pulse.Client.Calls;
+﻿using Pulse.Core.Calls;
+
+namespace Pulse.Client.Calls;
 
 public class CurrentCallAccessor
 {

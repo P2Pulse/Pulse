@@ -21,7 +21,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
 
         return services
-            .AddSingleton<ICaller, FakeCaller>()
             .AddTransient<ICallInitiator, UdpCallInitiator>()
             .AddTransient<ICallAcceptor, UdpCallAcceptor>()
             .AddTransient<UdpStreamFactory>()

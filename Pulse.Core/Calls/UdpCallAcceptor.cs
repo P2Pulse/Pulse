@@ -15,9 +15,9 @@ internal class UdpCallAcceptor : ICallAcceptor
         this.connectionFactory = connectionFactory;
     }
 
-    public async Task<Stream> AnswerCallAsync(CancellationToken ct = default)
+    public async Task<Call> AnswerCallAsync(CancellationToken ct = default)
     {
-        return await connectionFactory.ConnectAsync(async myInfo =>
+        var encryptedStream = await connectionFactory.ConnectAsync(async myInfo =>
         {
             Console.WriteLine("Answering call...");
             var response = await httpClient.PostAsJsonAsync(Endpoint, myInfo, ct).ConfigureAwait(false);
@@ -32,5 +32,7 @@ internal class UdpCallAcceptor : ICallAcceptor
 
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
         }, ct).ConfigureAwait(false);
+
+        return new Call(encryptedStream.Stream, encryptedStream.CredentialsHash);
     }
 }
