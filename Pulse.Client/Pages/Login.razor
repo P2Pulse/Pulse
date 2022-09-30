@@ -26,10 +26,15 @@
     private readonly List<string> errors = new();
 
     private bool Filled => !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password);
-    
+
+    protected override void OnInitialized()
+    {
+        Preferences.Default.Remove("logged-in-user");
+    }
 
     private async Task LogInAsync()
     {
+        Preferences.Default.Set("logged-in-user", username);
         var result = await Authenticator.AuthenticateAsync(username!, password!);
         if (result.Succeeded)
         {
