@@ -81,6 +81,11 @@ internal class PacketStream : Stream
         return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 
+    public override ValueTask DisposeAsync()
+    {
+        return connection.DisposeAsync();
+    }
+
     public override void Flush()
     {
         throw UseAsyncVersionException;

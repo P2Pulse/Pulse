@@ -46,7 +46,7 @@ internal class UdpChannel : IConnection
             await udpClient.SendAsync(messageContent, cancellationToken).ConfigureAwait(false);
             await Task.Delay(8, cancellationToken).ConfigureAwait(false); // TODO - delete this
         }
-        catch (ObjectDisposedException e)
+        catch (ObjectDisposedException)
         {
             // ignore
         }
@@ -55,6 +55,8 @@ internal class UdpChannel : IConnection
     public ValueTask DisposeAsync()
     {
         backgroundListening.Cancel();
+        
+        channel.Writer.TryComplete();
         
         return ValueTask.CompletedTask;
     }
