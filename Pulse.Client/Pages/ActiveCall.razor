@@ -53,6 +53,7 @@
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
             microphoneRecording.Cancel();
+            Microphone.StopRecording();
 
             NavigationManager.NavigateTo("/");
         }

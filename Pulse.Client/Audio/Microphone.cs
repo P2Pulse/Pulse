@@ -27,4 +27,9 @@ public class Microphone
             await streamToWriteTo.WriteAsync(buffer, 0, read, ct);
         }
     }
+    
+    public void StopRecording()
+    {
+        recorder.Stop();
+    }
 }
