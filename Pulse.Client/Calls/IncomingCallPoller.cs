@@ -6,15 +6,15 @@ namespace Pulse.Client.Calls;
 
 public class IncomingCallPoller
 {
-    private readonly CoreCallPoller incomingCallPoller;
+    private readonly IServiceProvider serviceProvider;
     private readonly CurrentCallAccessor callAccessor;
     private readonly ICallAcceptor callAcceptor;
     private readonly IAccessTokenStorage accessTokenStorage;
 
-    public IncomingCallPoller(CoreCallPoller incomingCallPoller, CurrentCallAccessor callAccessor, 
+    public IncomingCallPoller(IServiceProvider serviceProvider, CurrentCallAccessor callAccessor, 
         ICallAcceptor callAcceptor, IAccessTokenStorage accessTokenStorage)
     {
-        this.incomingCallPoller = incomingCallPoller;
+        this.serviceProvider = serviceProvider;
         this.callAccessor = callAccessor;
         this.callAcceptor = callAcceptor;
         this.accessTokenStorage = accessTokenStorage;
@@ -35,6 +35,8 @@ public class IncomingCallPoller
             
             if (callAccessor.CurrentCall is not null) // TODO: make this null at the end of the call
                 continue;
+
+            var incomingCallPoller = serviceProvider.GetRequiredService<CoreCallPoller>();
 
             try
             {
