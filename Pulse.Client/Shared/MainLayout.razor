@@ -10,9 +10,9 @@
     <MudAppBar Elevation="3">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
         <MudSpacer/>
-        Pulse
+        <MudImage Src="/logo.png" Height="90" Style="margin-top: 25px"/>
         <MudSpacer/>
-        <MudIconButton Icon="@Icons.Custom.Uncategorized.Radioactive" Color="Color.Inherit"/>
+        <MudIconButton Style="visibility: hidden" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
     </MudAppBar>
     <MudDrawer @bind-Open="@drawerOpen">
         <MudDrawerHeader Style="margin-bottom: 20px">
