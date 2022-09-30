@@ -45,11 +45,9 @@ public class IncomingCallPoller
                     continue;
 
                 callAccessor.CurrentCall = new Call(username, callAcceptor.AnswerCallAsync());
-
+                
                 // TODO: ask user if they want to accept the call
                 OnIncomingCall?.Invoke();
-
-                break; // TODO: allow more than one call in a session
             }
             catch (Exception e)
             {
