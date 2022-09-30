@@ -45,8 +45,13 @@ internal class PortBruteForceNatTraversal
         };
         Console.WriteLine("Starting to punch holes");
 
-        for (var k = 0; k < 3; k++)
+        for (var k = 0; k < 4; k++)
         {
+            if (k >= 2)
+            {
+                Console.WriteLine("Waiting a little before the next rounds to let the other party punch the NAT.");
+                await Task.Delay(1000 * k, cancellationToken);
+            }
             var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
@@ -71,14 +76,7 @@ internal class PortBruteForceNatTraversal
             }
 
             Console.WriteLine("loop");
-            if (k == 1)
-            {
-                Console.WriteLine("Waiting a little before third round to let the other party punch the NAT.");
-                await Task.Delay(2000, cancellationToken);
-            }
         }
-
-        await Task.Delay(5000, cancellationToken);
 
         throw new Exception("Could not establish connection ):");
     }
