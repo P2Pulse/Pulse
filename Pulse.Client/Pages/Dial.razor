@@ -12,7 +12,7 @@
     <MudText Typo="Typo.h5" Style="margin-top: 50px">Who do you want to call?</MudText>
     <MudTextField @bind-Value="username" Placeholder="john_doe" HelperText="Enter the username of the person you want to call"
                   Variant="Variant.Outlined" style="margin-top: 10px" Immediate="true"/>
-    <MudFab Style="margin-top: 10px" Color="Color.Primary" OnClick="Call" Disabled="@string.IsNullOrWhiteSpace(username)" Label="Call" StartIcon="@Icons.Material.Filled.Phone"/>
+    <MudFab Style="margin-top: 10px" Color="Color.Primary" OnClick="() => Call()" Disabled="@string.IsNullOrWhiteSpace(username)" Label="Call" StartIcon="@Icons.Material.Filled.Phone"/>
 
     @if (frequentContacts.Any())
     {
@@ -30,7 +30,7 @@
                         <MudText Typo="Typo.h6">@frequentContact</MudText>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Color="Color.Primary" Variant="Variant.Text">Call</MudButton>
+                        <MudButton Color="Color.Primary" Variant="Variant.Text" OnClick="@(() => Call(frequentContact))">Call</MudButton>
                     </MudCardActions>
                 </MudCard>
             }
@@ -48,9 +48,9 @@
         frequentContacts.AddRange((await Server.GetFromJsonAsync<IEnumerable<string>>("calls/frequent-contacts"))!);
     }
 
-    private void Call()
+    private void Call(string? overrideUsername = null)
     {
-        CallAccessor.CurrentCall = new Call(username!, CallInitiator.CallAsync(username!));
+        CallAccessor.CurrentCall = new Call(overrideUsername ?? username!, CallInitiator.CallAsync(overrideUsername ?? username!));
         NavManager.NavigateTo("/ActiveCall");
     }
 }
