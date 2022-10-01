@@ -75,7 +75,9 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
 
-builder.Services.AddSingleton<InMemoryCallMatcher>();
+builder.Services
+    .AddSingleton<InMemoryCallMatcher>()
+    .AddTransient<MongoCallRepository>();
 
 builder.Services.AddMemoryCache();
 
