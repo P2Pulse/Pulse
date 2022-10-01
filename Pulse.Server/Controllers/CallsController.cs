@@ -97,7 +97,14 @@ public class CallsController : ControllerBase
 
         return NoContent();
     }
-    
+
+    [HttpGet("recent")]
+    public async Task<ActionResult<IEnumerable<Call>>> GetRecentCallsAsync()
+    {
+        var calls = await callRepository.GetRecentCallsAsync(GetCurrentUsername());
+        return Ok(calls);
+    }
+
     private string GetCurrentUsername()
     {
         return User.Identity!.Name!;
