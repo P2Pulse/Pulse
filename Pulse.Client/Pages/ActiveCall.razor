@@ -66,13 +66,13 @@
             }
 
             await using var audioStream = call.Stream;
-            emojis = Emojis.GetEmojisForHash((await CurrentCall.Connection).EncryptedStreamCredentialsHash);
+            emojis = Emojis.GetEmojisForHash(call.EncryptedStreamCredentialsHash);
 
             StateHasChanged();
 
             callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();
-            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
+            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token), microphoneRecording.Token);
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
             microphoneRecording.Cancel();
             Microphone.StopRecording();
