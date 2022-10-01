@@ -120,7 +120,8 @@
         {
             CallAccessor.CurrentCall = null;
             if (callId is not null)
-                await Server.PutAsync($"{callId}/ending", content: null);
+                await Server.PutAsync($"calls/{callId}/ending", content: null);
+            
             NavigationManager.NavigateTo("/");
         }
     }
