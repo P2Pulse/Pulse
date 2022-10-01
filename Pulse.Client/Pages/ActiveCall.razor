@@ -8,6 +8,7 @@
 @inject Microphone Microphone
 @inject Speaker Speaker
 @inject NavigationManager NavigationManager
+@inject HttpClient Server
 
 <MudPaper Class="pa-4 ma-4" Height="85vh">
     <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
@@ -53,6 +54,7 @@
     private Stream? callAudioStream;
     private bool speakerOn;
     private string[] emojis = { };
+    private string? callId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,6 +69,8 @@
                 return;
             }
 
+            callId = call.CallId;
+            
             await using var audioStream = call.Stream;
             emojis = Emojis.GetEmojisForHash(call.EncryptedStreamCredentialsHash);
 
@@ -86,6 +90,8 @@
         finally
         {
             CallAccessor.CurrentCall = null;
+            if (callId is not null)
+                await Server.PutAsync($"{callId}/ending", content: null);
             NavigationManager.NavigateTo("/");
         }
     }

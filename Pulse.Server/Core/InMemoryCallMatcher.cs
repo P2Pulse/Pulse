@@ -18,16 +18,16 @@ public class InMemoryCallMatcher
         this.cache = cache;
     }
 
-    public Task InitiateCallAsync(InitiateCallRequest request, string callerUsername)
+    public Task InitiateCallAsync(string callId, InitiateCallRequest request, string callerUsername)
     {
         // TODO: If the caller is already in a call/there is a call waiting for him, return an error/handle it nicely.
         // TODO: If A is calling B and B didn't answer yet, C can call B and fuck A's call.
         // TODO: Add a timeout to calls on the server side.
         var myTaskCompletionSource = new TaskCompletionSource<ConnectionDetails>();
-        cache.Set(PendingConnectionKey(callerUsername), new PendingConnection(IsIncoming: false,
+        cache.Set(PendingConnectionKey(callerUsername), new PendingConnection(callId, IsIncoming: false,
             request.CalleeUserName, myTaskCompletionSource), CacheOptions);
-        cache.Set(PendingConnectionKey(request.CalleeUserName), new PendingConnection(
-            IsIncoming: true, callerUsername, new TaskCompletionSource<ConnectionDetails>()), CacheOptions);
+        cache.Set(PendingConnectionKey(request.CalleeUserName), new PendingConnection(callId, IsIncoming: true, 
+            OtherUsername: callerUsername, ConnectionDetails: new TaskCompletionSource<ConnectionDetails>()), CacheOptions);
 
         return myTaskCompletionSource.Task;
     }
@@ -35,7 +35,7 @@ public class InMemoryCallMatcher
     public IncomingCall? PollForIncomingCall(string username)
     {
         return TryGetPendingConnection(username, out var pendingConnection) && pendingConnection.IsIncoming
-            ? new IncomingCall(pendingConnection.OtherUsername)
+            ? new IncomingCall(pendingConnection.OtherUsername, pendingConnection.CallId)
             : null;
     }
 
@@ -92,5 +92,6 @@ public class InMemoryCallMatcher
         return cache.TryGetValue<PendingConnection>(PendingConnectionKey(username), out pendingConnection);
     }
 
-    private record PendingConnection(bool IsIncoming, string OtherUsername, TaskCompletionSource<ConnectionDetails> ConnectionDetails);
+    private record PendingConnection(string CallId, bool IsIncoming, string OtherUsername,
+        TaskCompletionSource<ConnectionDetails> ConnectionDetails);
 }

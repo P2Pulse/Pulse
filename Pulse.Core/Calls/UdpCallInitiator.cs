@@ -25,10 +25,13 @@ internal class UdpCallInitiator : ICallInitiator
         {
             return null;
         }
-        
+
+        string callId;
         try
         {
             initiationResponse.EnsureSuccessStatusCode();
+            var call = await initiationResponse.Content.ReadFromJsonAsync<Server.Contracts.Call>(cancellationToken: ct).ConfigureAwait(false);
+            callId = call!.Id;
         }
         catch (Exception e)
         {
@@ -52,6 +55,6 @@ internal class UdpCallInitiator : ICallInitiator
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
         }, ct).ConfigureAwait(false);
 
-        return new Call(encryptedStream.Stream, encryptedStream.CredentialsHash);
+        return new Call(callId, encryptedStream.Stream, encryptedStream.CredentialsHash);
     }
 }

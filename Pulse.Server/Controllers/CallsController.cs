@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.Server.Contracts;
 using Pulse.Server.Core;
+using Pulse.Server.Persistence;
 
 namespace Pulse.Server.Controllers;
 
@@ -12,12 +12,12 @@ namespace Pulse.Server.Controllers;
 public class CallsController : ControllerBase
 {
     private readonly InMemoryCallMatcher callMatcher;
-    private readonly UserManager<IdentityUser> userManager;
+    private readonly MongoCallRepository callRepository;
 
-    public CallsController(InMemoryCallMatcher callMatcher, UserManager<IdentityUser> userManager)
+    public CallsController(InMemoryCallMatcher callMatcher, MongoCallRepository callRepository)
     {
         this.callMatcher = callMatcher;
-        this.userManager = userManager;
+        this.callRepository = callRepository;
     }
     
     /// <summary>
@@ -26,18 +26,32 @@ public class CallsController : ControllerBase
     /// <param name="request">Details about the call</param>
     /// <returns>Connection details</returns>
     [HttpPost]
-    public async Task<IActionResult> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
+    public async Task<ActionResult<Call>> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
+        var call = new Call
+        {
+            Id = Guid.NewGuid().ToString(),
+            CallTime = DateTime.UtcNow,
+            Caller = GetCurrentUsername(),
+            Callee = request.CalleeUserName
+        };
+
         try
         {
-            await callMatcher.InitiateCallAsync(request, GetCurrentUsername());
+            await callMatcher.InitiateCallAsync(Guid.NewGuid().ToString(), request, GetCurrentUsername());
+            call.AnswerTime = DateTime.UtcNow;
         }
         catch (OperationCanceledException)
         {
+            call.EndTime = DateTime.UtcNow;
             return StatusCode(StatusCodes.Status418ImATeapot);
         }
-        
-        return NoContent();
+        finally
+        {
+            await callRepository.SaveAsync(call);
+        }
+
+        return Ok(call);
     }
 
     /// <summary>
@@ -59,7 +73,7 @@ public class CallsController : ControllerBase
     public IActionResult DeclineIncomingCall()
     {
         callMatcher.DeclineIncomingCall(GetCurrentUsername());
-
+        
         return NoContent();
     }
 
@@ -72,6 +86,16 @@ public class CallsController : ControllerBase
     public async Task<ActionResult<ConnectionDetails>> JoinPendingCallAsync([FromBody] JoinCallRequest request)
     {
         return await callMatcher.JoinCallAsync(request, GetCurrentUsername());
+    }
+
+    [HttpPut("{callId}/ending")]
+    public async Task<IActionResult> MarkCallAsEndedAsync(string callId)
+    {
+        var call = await callRepository.GetByIdAsync(callId);
+        call.EndTime = DateTime.UtcNow;
+        await callRepository.SaveAsync(call);
+
+        return NoContent();
     }
     
     private string GetCurrentUsername()

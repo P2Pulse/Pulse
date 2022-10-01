@@ -1,3 +1,3 @@
 namespace Pulse.Core.Calls;
 
-public record Call(Stream Stream, string EncryptedStreamCredentialsHash);
+public record Call(string? CallId, Stream Stream, string EncryptedStreamCredentialsHash);

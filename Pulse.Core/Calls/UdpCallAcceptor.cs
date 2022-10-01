@@ -33,7 +33,7 @@ internal class UdpCallAcceptor : ICallAcceptor
             return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
         }, ct).ConfigureAwait(false);
 
-        return new Call(encryptedStream.Stream, encryptedStream.CredentialsHash);
+        return new Call(CallId: null, encryptedStream.Stream, encryptedStream.CredentialsHash);
     }
 
     public async Task DeclineCallAsync(CancellationToken cancellationToken = default)
