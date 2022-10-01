@@ -12,14 +12,14 @@
 
 <MudPaper Class="pa-4 ma-4" Height="85vh">
     <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
-        <Avatar Username="@CurrentCall.OtherUser"/>
-        <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
-        @if (!CurrentCall.Connection.IsCompleted)
+        <Avatar Username="@currentCall.OtherUser" />
+        <MudText Typo="Typo.h2">@currentCall.OtherUser</MudText>
+        @if (!currentCall.Connection.IsCompleted)
         {
             <p>Connecting...</p>
             <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
         }
-        else if (CurrentCall.Connection.IsFaulted)
+        else if (currentCall.Connection.IsFaulted)
         {
             <MudAlert Severity="Severity.Error">Could not connect!</MudAlert>
         }
@@ -73,7 +73,7 @@
 </MudPaper>
 
 @code {
-    private Call CurrentCall => CallAccessor.CurrentCall!;
+    private Call currentCall;
     private Stream? callAudioStream;
     private bool speakerOn;
     private string[] emojis = { };
@@ -86,24 +86,37 @@
     {
         try
         {
-            await using var audioStream = (await CurrentCall.Connection).Stream;
-            emojis = Emojis.GetEmojisForHash((await CurrentCall.Connection).EncryptedStreamCredentialsHash);
+            currentCall = CallAccessor.CurrentCall!;
+            
+            var call = await currentCall.Connection;
+            if (call is null)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            await using var audioStream = call.Stream;
+            emojis = Emojis.GetEmojisForHash(call.EncryptedStreamCredentialsHash);
+
             stopwatch.Start();
             await using var timer = new Timer(async _ => { await InvokeAsync(StateHasChanged); }, null, (long)0, 100);
             StateHasChanged();
 
             callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();
-            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
+            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token), microphoneRecording.Token);
             await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
             microphoneRecording.Cancel();
             Microphone.StopRecording();
-
-            NavigationManager.NavigateTo("/");
         }
         catch
         {
             // ignored
+        }
+        finally
+        {
+            CallAccessor.CurrentCall = null;
+            NavigationManager.NavigateTo("/");
         }
     }
 
@@ -111,7 +124,6 @@
     {
         if (callAudioStream != null)
             await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
-    // todo: not working
     }
 
     private void ToggleSpeaker()

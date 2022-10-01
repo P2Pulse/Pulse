@@ -35,4 +35,10 @@ internal class UdpCallAcceptor : ICallAcceptor
 
         return new Call(encryptedStream.Stream, encryptedStream.CredentialsHash);
     }
+
+    public async Task DeclineCallAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync("calls/incoming", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
 }

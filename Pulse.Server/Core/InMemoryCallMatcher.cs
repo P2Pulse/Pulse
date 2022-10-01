@@ -70,6 +70,21 @@ public class InMemoryCallMatcher
         });
     }
     
+    public void DeclineIncomingCall(string username)
+    {
+        if (!TryGetPendingConnection(username, out var pendingConnection)) 
+            return;
+        
+        cache.Remove(PendingConnectionKey(username));
+
+        if (!TryGetPendingConnection(pendingConnection.OtherUsername, out var otherUserConnection)) 
+            return;
+        
+        otherUserConnection.ConnectionDetails.TrySetCanceled();
+        
+        cache.Remove(PendingConnectionKey(pendingConnection.OtherUsername));
+    }
+    
     private static string PendingConnectionKey(string username) => $"pending-connections:{username}";
 
     private bool TryGetPendingConnection(string username, [NotNullWhen(true)]out PendingConnection? pendingConnection)

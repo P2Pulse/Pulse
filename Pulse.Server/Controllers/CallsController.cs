@@ -28,7 +28,15 @@ public class CallsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> InitiateNewCallAsync([FromBody] InitiateCallRequest request)
     {
-        await callMatcher.InitiateCallAsync(request, GetCurrentUsername());
+        try
+        {
+            await callMatcher.InitiateCallAsync(request, GetCurrentUsername());
+        }
+        catch (OperationCanceledException)
+        {
+            return StatusCode(StatusCodes.Status418ImATeapot);
+        }
+        
         return NoContent();
     }
 
@@ -46,7 +54,15 @@ public class CallsController : ControllerBase
 
         return incomingCall;
     }
-    
+
+    [HttpDelete("incoming")]
+    public IActionResult DeclineIncomingCall()
+    {
+        callMatcher.DeclineIncomingCall(GetCurrentUsername());
+
+        return NoContent();
+    }
+
     /// <summary>
     /// Join a pending call
     /// </summary>

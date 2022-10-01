@@ -21,7 +21,16 @@
 {
 	protected override async Task OnInitializedAsync()
 	{
-		IncomingCallPoller.OnIncomingCall += () => NavigationManager.NavigateTo("/ActiveCall");
+		IncomingCallPoller.OnIncomingCall += async username =>
+		{
+			var shouldAnswerCall = await DialogService.ShowMessageBox($"Incoming Call From {username}",
+				$"{username} is calling you. Do you wish to accept the call?", yesText: "Answer",
+				noText: "Decline");
+			return shouldAnswerCall.GetValueOrDefault();
+		};
+		
+		IncomingCallPoller.OnCallAnswer += () => NavigationManager.NavigateTo("/ActiveCall");
+		
 		var permissionStatus = await Permissions.RequestAsync<Permissions.Microphone>();
 		if (permissionStatus != PermissionStatus.Granted)
 		{
