@@ -1,0 +1,80 @@
+﻿@page "/CallHistory"
+@using Pulse.Server.Contracts
+@using System.Net.Http.Json
+@using System.Text
+@using Microsoft.Maui.Platform
+@inject HttpClient Server
+<div style="padding: 15px">
+    <h3>Recent calls</h3>
+    @if (recentCalls.Any())
+    {
+        <MudStack>
+            @foreach (var recentCall in recentCalls)
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudIcon Icon="@(recentCall.Caller == myUserName ? Icons.Filled.CallMade : Icons.Filled.CallReceived)" />
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1">@(recentCall.Caller == myUserName ? recentCall.Callee : recentCall.Caller)</MudText>
+                            <MudText Typo="Typo.body2">@FormatCallTime(recentCall) (@FormatDuration(recentCall))</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.PhoneCallback" Color="Color.Default" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                </MudCard>
+            }
+        </MudStack>
+    }
+    else
+    {
+        <MudText>You didn't make any calls yet 😕</MudText>
+    }
+</div>
+
+@code {
+    private readonly List<Call> recentCalls = new();
+    private readonly string myUserName = Preferences.Default.Get("logged-in-user", defaultValue: string.Empty);
+
+    protected override async Task OnInitializedAsync()
+    {
+        recentCalls.AddRange((await Server.GetFromJsonAsync<IEnumerable<Call>>("calls/recent"))!);
+    }
+
+    private static string FormatDuration(Call call)
+    {
+        if (call.AnswerTime is null)
+            return "Unanswered";
+
+        if (call.EndTime is null)
+            return "Ongoing";
+
+        var duration = (call.EndTime - call.AnswerTime).Value;
+        
+        if (duration.Days > 0)
+            return "Get help";
+
+        return duration.ToFormattedString("hh:mm:ss");
+    }
+
+    private static string FormatCallTime(Call call)
+    {
+        var localTime = call.CallTime.ToLocalTime();
+        var timePart = localTime.ToShortTimeString();
+
+        string datePart;
+
+        if (localTime.Date == DateTime.Today)
+            datePart = "Today";
+        else if (localTime.Date.AddDays(1) == DateTime.Today)
+            datePart = "Yesterday";
+        else if (localTime.Year == DateTime.Today.Year)
+            datePart = localTime.ToString("MMMM dd");
+        else
+            datePart = localTime.ToString("MMMM dd, yyyy");
+
+        return $"{datePart} at {timePart}";
+    }
+}

@@ -22,7 +22,7 @@
             </MudStack>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Speaker" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone test (REMOVE ME)</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Mic" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone Test</MudNavLink>
             @if (AccessTokenStorage.AccessToken is null)
             {
                 <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Login" IconColor="Color.Inherit" Href="/Login">Log In / Sign Up</MudNavLink>
@@ -30,6 +30,7 @@
             else
             {
                 <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit" Href="/">Dial</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit" Href="/CallHistory">Call History</MudNavLink>
                 <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Logout" IconColor="Color.Inherit" OnClick="LogOutAsync">Log Out</MudNavLink>
             }
         </MudNavMenu>
