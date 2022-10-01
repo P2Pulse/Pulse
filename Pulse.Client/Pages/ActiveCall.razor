@@ -4,6 +4,7 @@
 @using Android.Media
 @using Stream = System.IO.Stream
 @using Android.Content
+@using System.Diagnostics
 @inject CurrentCallAccessor CallAccessor
 @inject Microphone Microphone
 @inject Speaker Speaker
@@ -11,7 +12,7 @@
 
 <MudPaper Class="pa-4 ma-4" Height="85vh">
     <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
-        <Avatar Username="@CurrentCall.OtherUser" />
+        <Avatar Username="@CurrentCall.OtherUser"/>
         <MudText Typo="Typo.h2">@CurrentCall.OtherUser</MudText>
         @if (!CurrentCall.Connection.IsCompleted)
         {
@@ -24,7 +25,8 @@
         }
         else
         {
-            <p>Connected!</p>
+            <MudText Typo="Typo.body1">Connected!</MudText>
+            <MudText Typo="Typo.body1">@stopwatch.Elapsed.ToString(@"hh\:mm\:ss")</MudText>
             <div class="d-flex justify-center" style="width: 100%">
                 <div class="d-flex flex-wrap justify-center" style="width: 50%">
                     @foreach (var emoji in emojis)
@@ -34,16 +36,38 @@
                 </div>
             </div>
         }
-        <MudToggleIconButton Icon="@Icons.Material.Outlined.Campaign"
-                             Toggled="@speakerOn"
-                             Size="Size.Large"
-                             ToggledSize="Size.Large"
-                             ToggledChanged="ToggleSpeaker"
-                             Color="@Color.Primary" Title="Off"
-                             ToggledIcon="@Icons.Material.Filled.Campaign"
-                             ToggledColor="@Color.Primary"
-                             ToggledTitle="On"/>
 
+        <div class="mt-10 d-flex flex-grow-1 gap-4 justify-space-evenly">
+            <MudFab Class="@(speakerOn ? "white" : "mud-theme-primary")"
+                    Color="@(speakerOn ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleSpeaker"
+                    StartIcon="@(speakerOn ? Icons.Material.Filled.VolumeUp : Icons.Material.Outlined.VolumeUp)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(speakerOn ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+            <MudFab Class="@(onHold ? "white" : "mud-theme-primary")"
+                    Color="@(onHold ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleHold"
+                    Disabled="muted"
+                    StartIcon="@(onHold ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Pause)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(onHold ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+            <MudFab Class="@(muted ? "white" : "mud-theme-primary")"
+                    Color="@(muted ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleMute"
+                    Disabled="onHold"
+                    StartIcon="@(muted ? Icons.Material.Filled.MicOff : Icons.Material.Outlined.MicOff)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(muted ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+        </div>
         <MudFab Icon="@Icons.Filled.CallEnd" Style="bottom: 0" Class="position-absolute mb-10" Color="Color.Error" OnClick="HangUpAsync"></MudFab>
     </MudStack>
 </MudPaper>
@@ -53,6 +77,10 @@
     private Stream? callAudioStream;
     private bool speakerOn;
     private string[] emojis = { };
+    private bool muted;
+    private bool onHold;
+    private Stopwatch stopwatch = new();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,7 +88,8 @@
         {
             await using var audioStream = (await CurrentCall.Connection).Stream;
             emojis = Emojis.GetEmojisForHash((await CurrentCall.Connection).EncryptedStreamCredentialsHash);
-
+            stopwatch.Start();
+            await using var timer = new Timer(async _ => { await InvokeAsync(StateHasChanged); }, null, (long)0, 100);
             StateHasChanged();
 
             callAudioStream = audioStream;
@@ -91,6 +120,26 @@
         var context = Android.App.Application.Context;
         var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
         audioManager.SpeakerphoneOn = speakerOn;
+    }
+
+    private void ToggleMute()
+    {
+        muted = !muted;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.MicrophoneMute = muted;
+    }
+
+    private void ToggleHold()
+    {
+        onHold = !onHold;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.MicrophoneMute = onHold;
+
+        audioManager.AdjustSuggestedStreamVolume(onHold ? Adjust.Mute : Adjust.Unmute,
+            Android.Media.Stream.VoiceCall,
+            VolumeNotificationFlags.RemoveSoundAndVibrate);
     }
 
 }
