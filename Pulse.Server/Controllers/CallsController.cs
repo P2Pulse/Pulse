@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Collections.Immutable;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.Server.Contracts;
 using Pulse.Server.Core;
@@ -103,6 +104,28 @@ public class CallsController : ControllerBase
     {
         var calls = await callRepository.GetRecentCallsAsync(GetCurrentUsername());
         return Ok(calls);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<string>>> GetFrequentContactsAsync()
+    {
+        var calls = await callRepository.GetRecentCallsAsync(GetCurrentUsername(), limit: 500);
+        var frequentContacts = calls
+            .Select(c => new
+            {
+                OtherUser = c.Caller == GetCurrentUsername() ? c.Callee : c.Caller,
+                Score = 1 / Math.Max(1, (DateTime.UtcNow - c.CallTime).TotalDays)
+            })
+            .GroupBy(c => c.OtherUser)
+            .Select(u => new
+            {
+                User = u.Key,
+                Score = u.Select(c => c.Score).Sum()
+            })
+            .OrderByDescending(u => u.Score)
+            .ToImmutableList();
+
+        return Ok(frequentContacts);
     }
 
     private string GetCurrentUsername()

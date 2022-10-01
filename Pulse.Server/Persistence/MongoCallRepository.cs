@@ -24,13 +24,13 @@ public class MongoCallRepository
         return await calls.AsQueryable().SingleAsync(call => call.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Call>> GetRecentCallsAsync(string username,
+    public async Task<IReadOnlyList<Call>> GetRecentCallsAsync(string username, int limit = 20,
         CancellationToken cancellationToken = default)
     {
         var recentCalls = await calls.AsQueryable()
             .Where(c => c.Callee == username || c.Caller == username)
             .OrderByDescending(c => c.CallTime)
-            .Take(20)
+            .Take(limit)
             .ToListAsync(cancellationToken);
 
         return recentCalls.AsReadOnly();
