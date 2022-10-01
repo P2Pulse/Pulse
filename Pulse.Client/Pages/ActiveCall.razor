@@ -46,7 +46,14 @@
     {
         try
         {
-            await using var audioStream = (await CurrentCall.Connection).Stream;
+            var call = await CurrentCall.Connection;
+            if (call is null)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            await using var audioStream = call.Stream;
             StateHasChanged();
             callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();
@@ -61,13 +68,16 @@
         {
             error = e.ToString();
         }
+        finally
+        {
+            CallAccessor.CurrentCall = null;
+        }
     }
 
     private async Task HangUpAsync()
     {
         if (callAudioStream != null)
             await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
-    // todo: not working
     }
 
     private void ToggleSpeaker()
@@ -77,5 +87,4 @@
         var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
         audioManager.SpeakerphoneOn = speakerOn;
     }
-
 }

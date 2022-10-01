@@ -22,7 +22,8 @@ public class IncomingCallPoller
         _ = PollForCallsAsync();
     }
 
-    public event Action? OnIncomingCall;
+    public event Func<string, Task<bool>> OnIncomingCall; // I'm sorry :(
+    public event Action? OnCallAnswer;
 
     private async Task PollForCallsAsync()
     {
@@ -33,7 +34,7 @@ public class IncomingCallPoller
             if (accessTokenStorage.AccessToken is null)
                 continue;
             
-            if (callAccessor.CurrentCall is not null) // TODO: make this null at the end of the call
+            if (callAccessor.CurrentCall is not null)
                 continue;
 
             var incomingCallPoller = serviceProvider.GetRequiredService<CoreCallPoller>();
@@ -43,11 +44,18 @@ public class IncomingCallPoller
                 var username = await incomingCallPoller.PollAsync();
                 if (username is null)
                     continue;
+                
+                var shouldAnswerCall = await OnIncomingCall.Invoke(username);
+
+                if (!shouldAnswerCall)
+                {
+                    await callAcceptor.DeclineCallAsync();
+                    continue;
+                }
 
                 callAccessor.CurrentCall = new Call(username, callAcceptor.AnswerCallAsync());
-                
-                // TODO: ask user if they want to accept the call
-                OnIncomingCall?.Invoke();
+
+                OnCallAnswer?.Invoke();
             }
             catch (Exception e)
             {
