@@ -18,29 +18,41 @@
             <p>Connecting...</p>
             <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
         }
+        else if (CurrentCall.Connection.IsFaulted)
+        {
+            <MudAlert Severity="Severity.Error">Could not connect!</MudAlert>
+        }
         else
         {
             <p>Connected!</p>
+            <div class="d-flex justify-center" style="width: 100%">
+                <div class="d-flex flex-wrap justify-center" style="width: 50%">
+                    @foreach (var emoji in emojis)
+                    {
+                        <MudText Typo="Typo.h4" Style="text-align: center; flex: 25%" Class="mr-1 ml-1 pa-0">@emoji</MudText>
+                    }
+                </div>
+            </div>
         }
-        @if (error is not null)
-        {
-            <p>@error</p> // TODO: remove this
-        }
-        <MudFab Icon="@Icons.Filled.CallEnd" Color="Color.Error" OnClick="HangUpAsync"></MudFab>
-        <MudToggleIconButton Icon="@Icons.Material.Filled.Campaign"
+        <MudToggleIconButton Icon="@Icons.Material.Outlined.Campaign"
                              Toggled="@speakerOn"
+                             Size="Size.Large"
+                             ToggledSize="Size.Large"
                              ToggledChanged="ToggleSpeaker"
-                             Color="@Color.Dark" Title="Off"
-                             ToggledIcon="@Icons.Material.Outlined.Campaign" ToggledColor="@Color.Dark"
+                             Color="@Color.Primary" Title="Off"
+                             ToggledIcon="@Icons.Material.Filled.Campaign"
+                             ToggledColor="@Color.Primary"
                              ToggledTitle="On"/>
+
+        <MudFab Icon="@Icons.Filled.CallEnd" Style="bottom: 0" Class="position-absolute mb-10" Color="Color.Error" OnClick="HangUpAsync"></MudFab>
     </MudStack>
 </MudPaper>
 
 @code {
     private Call CurrentCall => CallAccessor.CurrentCall!;
-    private string? error;
     private Stream? callAudioStream;
     private bool speakerOn;
+    private string[] emojis = { };
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,7 +66,10 @@
             }
 
             await using var audioStream = call.Stream;
+            emojis = Emojis.GetEmojisForHash((await CurrentCall.Connection).EncryptedStreamCredentialsHash);
+
             StateHasChanged();
+
             callAudioStream = audioStream;
             var microphoneRecording = new CancellationTokenSource();
             _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token));
@@ -64,9 +79,9 @@
 
             NavigationManager.NavigateTo("/");
         }
-        catch (Exception e)
+        catch
         {
-            error = e.ToString();
+            // ignored
         }
         finally
         {
