@@ -13,10 +13,13 @@ public static class Emojis
         if (bytes.Length != 32)
             throw new ArgumentException("bytes length must be 32");
 
-        var emojisCount = emojis.Length;
-        // NOTE: we are taking only the first 24 bytes of the hash! (192 bits)
-        var bytesAsInts = Enumerable.Range(0, 6).Select(i => bytes[i..(i + 5)]);  // weak in comparison to the full hash, but still good for this project
-
-        return bytesAsInts.Select(bytesAsInt => BitConverter.ToInt32(bytesAsInt)).Select(num => emojis[num % emojisCount]).ToArray();
+        // NOTE: we are taking only the first 24 bytes of the hash! (192 bits) and for
+        // each 4 bytes we have only as little as 2600~ options, so it is weak in comparison
+        // to the sha-256 hash, but creating a collision here is super hard anyways.
+        return bytes.Chunk(4).Select(bytesAsInt => BitConverter
+            .ToInt32(bytesAsInt))
+            .Select(num => emojis[num % emojis.Length])
+            .Take(6)
+            .ToArray();
     }
 }
