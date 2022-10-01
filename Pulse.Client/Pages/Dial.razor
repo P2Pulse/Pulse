@@ -2,20 +2,51 @@
 @using Pulse.Core.Calls
 @using Pulse.Client.Calls
 @using Call = Pulse.Client.Calls.Call
+@using System.Net.Http.Json
 @inject ICallInitiator CallInitiator
 @inject CurrentCallAccessor CallAccessor
 @inject NavigationManager NavManager
+@inject HttpClient Server
 
 <div style="padding: 15px; text-align: center;">
-    <h3 style="margin-top: 50px">Who do you want to call?</h3>
-    <MudTextField @bind-Value="username" Placeholder="john_doe" HelperText="Enter the username of the person you want to call" 
-                  Variant="Variant.Outlined" style="margin-top: 10px" Immediate="true" />
-    <MudFab Style="margin-top: 10px" Color="Color.Primary" OnClick="Call" Disabled="@string.IsNullOrWhiteSpace(username)" Label="Call" StartIcon="@Icons.Material.Filled.Phone" />
+    <MudText Typo="Typo.h5" Style="margin-top: 50px">Who do you want to call?</MudText>
+    <MudTextField @bind-Value="username" Placeholder="john_doe" HelperText="Enter the username of the person you want to call"
+                  Variant="Variant.Outlined" style="margin-top: 10px" Immediate="true"/>
+    <MudFab Style="margin-top: 10px" Color="Color.Primary" OnClick="Call" Disabled="@string.IsNullOrWhiteSpace(username)" Label="Call" StartIcon="@Icons.Material.Filled.Phone"/>
+
+    @if (frequentContacts.Any())
+    {
+        <MudText Typo="Typo.h6" Style="margin-top: 50px; margin-bottom: 20px">Frequent Contacts</MudText>
+        <div class="frequent-contacts-widget">
+            @foreach (var frequentContact in frequentContacts)
+            {
+                <MudCard Class="frequent-contact-card" Style="margin-right: 10px; scroll-snap-align: center; " Elevation="2">
+                    <MudCardHeader Style="text-align: center; width: 60vw;">
+                        <div style="margin: 0 auto">
+                            <Avatar Username="@frequentContact"/>
+                        </div>
+                    </MudCardHeader>
+                    <MudCardContent Style="text-align: center">
+                        <MudText Typo="Typo.h6">@frequentContact</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Color="Color.Primary" Variant="Variant.Text">Call</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            }
+        </div>
+    }
 </div>
 
 
 @code {
     private string? username;
+    private readonly List<string> frequentContacts = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        frequentContacts.AddRange((await Server.GetFromJsonAsync<IEnumerable<string>>("calls/frequent-contacts"))!);
+    }
 
     private void Call()
     {

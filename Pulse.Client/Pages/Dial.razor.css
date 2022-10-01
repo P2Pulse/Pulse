@@ -1,0 +1,10 @@
+﻿.frequent-contacts-widget {
+    scroll-snap-type: x mandatory; 
+    display: flex; 
+    overflow-x: scroll;
+    padding-bottom: 10px;
+}
+
+.frequent-contacts-widget::-webkit-scrollbar {
+    display: none;
+}
