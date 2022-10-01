@@ -29,7 +29,7 @@ public class InMemoryCallMatcher
         cache.Set(PendingConnectionKey(request.CalleeUserName), new PendingConnection(callId, IsIncoming: true, 
             OtherUsername: callerUsername, ConnectionDetails: new TaskCompletionSource<ConnectionDetails>()), CacheOptions);
 
-        return myTaskCompletionSource.Task;
+        return myTaskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(25));
     }
     
     public IncomingCall? PollForIncomingCall(string username)

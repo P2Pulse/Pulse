@@ -41,7 +41,7 @@ public class CallsController : ControllerBase
             await callMatcher.InitiateCallAsync(Guid.NewGuid().ToString(), request, GetCurrentUsername());
             call.AnswerTime = DateTime.UtcNow;
         }
-        catch (OperationCanceledException)
+        catch (Exception e) when (e is OperationCanceledException or TimeoutException)
         {
             call.EndTime = DateTime.UtcNow;
             return StatusCode(StatusCodes.Status418ImATeapot);
