@@ -106,7 +106,7 @@ public class CallsController : ControllerBase
         return Ok(calls);
     }
 
-    [HttpGet]
+    [HttpGet("frequent-contacts")]
     public async Task<ActionResult<IEnumerable<string>>> GetFrequentContactsAsync()
     {
         var calls = await callRepository.GetRecentCallsAsync(GetCurrentUsername(), limit: 500);
@@ -123,6 +123,7 @@ public class CallsController : ControllerBase
                 Score = u.Select(c => c.Score).Sum()
             })
             .OrderByDescending(u => u.Score)
+            .Select(u => u.User)
             .ToImmutableList();
 
         return Ok(frequentContacts);
