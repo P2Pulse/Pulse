@@ -75,7 +75,11 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddUserStore<MongoUserStore>()
     .AddRoleStore<FakeRoleStore>();
 
-builder.Services.AddSingleton<InMemoryCallMatcher>();
+builder.Services
+    .AddSingleton<InMemoryCallMatcher>()
+    .AddTransient<MongoCallRepository>();
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -97,6 +101,7 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = false; // TODO: Set up certificates
 });
 
+
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 builder.Services.AddSingleton(new MongoClient(builder.Configuration.GetConnectionString("MainMongoDBConnection")));
@@ -105,7 +110,9 @@ builder.Logging.AddFile($"{Directory.GetCurrentDirectory()}/Logs/log.txt");
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
+var insecureErrorMessageExposure = true; // TODO: remove this
+if (app.Environment.IsDevelopment() || insecureErrorMessageExposure) 
+    app.UseDeveloperExceptionPage();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();

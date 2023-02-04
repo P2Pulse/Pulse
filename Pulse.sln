@@ -1,14 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Core", "Pulse.Core\Pulse.Core.csproj", "{984F9C48-82C3-4162-B72C-795CC2C41790}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32912.340
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Core", "Pulse.Core\Pulse.Core.csproj", "{984F9C48-82C3-4162-B72C-795CC2C41790}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Cli", "Pulse.Cli\Pulse.Cli.csproj", "{DBA23C35-7822-419B-B259-EAAA855858D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Cli", "Pulse.Cli\Pulse.Cli.csproj", "{DBA23C35-7822-419B-B259-EAAA855858D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Server", "Pulse.Server\Pulse.Server.csproj", "{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Server", "Pulse.Server\Pulse.Server.csproj", "{03A75CAD-E8B5-4FCC-8C49-3C9E457181A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Core.Tests", "Pulse.Core.Tests\Pulse.Core.Tests.csproj", "{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Core.Tests", "Pulse.Core.Tests\Pulse.Core.Tests.csproj", "{7FBEC4F7-60D5-4820-99FA-D4D4FCAE8B3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Server.Contracts", "Pulse.Server.Contracts\Pulse.Server.Contracts.csproj", "{A0E106A6-95A3-45F5-915D-D99D0AA132C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pulse.Server.Contracts", "Pulse.Server.Contracts\Pulse.Server.Contracts.csproj", "{A0E106A6-95A3-45F5-915D-D99D0AA132C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.Client", "Pulse.Client\Pulse.Client.csproj", "{F3C8F86F-6396-421A-84CE-125DC4703B45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NatLogger", "NatLogger\NatLogger.csproj", "{74501039-39D9-4615-8BB4-CE3E9D59CD32}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulse.LatencyTest", "Pulse.LatencyTest\Pulse.LatencyTest.csproj", "{A584192D-F275-4907-B932-2B4BFBCD00C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +45,25 @@ Global
 		{A0E106A6-95A3-45F5-915D-D99D0AA132C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0E106A6-95A3-45F5-915D-D99D0AA132C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0E106A6-95A3-45F5-915D-D99D0AA132C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3C8F86F-6396-421A-84CE-125DC4703B45}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{74501039-39D9-4615-8BB4-CE3E9D59CD32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74501039-39D9-4615-8BB4-CE3E9D59CD32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74501039-39D9-4615-8BB4-CE3E9D59CD32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74501039-39D9-4615-8BB4-CE3E9D59CD32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A584192D-F275-4907-B932-2B4BFBCD00C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A584192D-F275-4907-B932-2B4BFBCD00C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A584192D-F275-4907-B932-2B4BFBCD00C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A584192D-F275-4907-B932-2B4BFBCD00C3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A2E77491-1DBA-4928-8317-C3BC69DC40A3}
 	EndGlobalSection
 EndGlobal

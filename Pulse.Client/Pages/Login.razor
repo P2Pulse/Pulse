@@ -1,0 +1,63 @@
+@page "/Login"
+@using Pulse.Core.Authentication
+@inject AccountRegistrar AccountRegistrar
+@inject Authenticator Authenticator
+@inject NavigationManager NavigationManager
+
+<div Style="padding: 15px; margin-top: 30px; text-align: center" >
+    <h3 style="margin-bottom: 20px">Log In / Sign Up</h3>
+    @foreach (var error in errors)
+    {
+        <MudText Color="@Color.Error">@error</MudText>
+    }
+    <MudTextField @bind-Value="username" Placeholder="john_doe" Variant="Variant.Outlined" 
+        style="margin-top: 10px" Immediate="true" HelperText="Enter a public username" Required="true" RequiredError="Username is required"/>
+    <MudTextField @bind-Value="password" Placeholder="P@s$word123" Variant="Variant.Outlined" 
+        style="margin-top: 10px" Immediate="true" Required="true" HelperText="Enter a strong password" InputType="InputType.Password" RequiredError="Password is required"/>
+    <div style="margin-top: 20px">
+        <MudButton Disabled="@(!Filled)" Color="Color.Primary" Variant="Variant.Filled" OnClick="LogInAsync" Style="margin-right: 5px">Log In</MudButton>
+        <MudButton Disabled="@(!Filled)" Color="Color.Primary" Variant="Variant.Outlined" OnClick="RegisterAsync">Sign Up</MudButton>
+    </div>
+</div>
+
+@code {
+    private string? username;
+    private string? password;
+    private readonly List<string> errors = new();
+
+    private bool Filled => !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password);
+
+    protected override void OnInitialized()
+    {
+        Preferences.Default.Remove("logged-in-user");
+    }
+
+    private async Task LogInAsync()
+    {
+        Preferences.Default.Set("logged-in-user", username);
+        var result = await Authenticator.AuthenticateAsync(username!, password!);
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            errors.Clear();
+            errors.AddRange(result.Errors);
+        }
+    }
+
+    private async Task RegisterAsync()
+    {
+        var result = await AccountRegistrar.RegisterAsync(username!, password!);
+        if (result.Succeeded)
+        {
+            await LogInAsync();
+        }
+        else
+        {
+            errors.Clear();
+            errors.AddRange(result.Errors);
+        }
+    }
+}

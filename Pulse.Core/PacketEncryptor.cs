@@ -51,7 +51,7 @@ internal class PacketEncryptor : IDisposable
 
         var encryptor = aes.CreateEncryptor();
 
-        var encryptedContent = await CryptoTransformAsync(packet.Content, encryptor);
+        var encryptedContent = await CryptoTransformAsync(packet.Content, encryptor).ConfigureAwait(false);
         return packet with { Content = encryptedContent.ToArray() };
     }
 
@@ -68,7 +68,7 @@ internal class PacketEncryptor : IDisposable
 
         var decryptor = aes.CreateDecryptor();
 
-        var decryptedContent = await CryptoTransformAsync(encryptedPacket.Content, decryptor);
+        var decryptedContent = await CryptoTransformAsync(encryptedPacket.Content, decryptor).ConfigureAwait(false);
         return encryptedPacket with { Content = decryptedContent.ToArray() };
     }
 
@@ -83,9 +83,20 @@ internal class PacketEncryptor : IDisposable
             cryptoTransformer,
             CryptoStreamMode.Write
         );
-        await cs.WriteAsync(data);
-        await cs.FlushFinalBlockAsync();
+        await cs.WriteAsync(data).ConfigureAwait(false);
+        await cs.FlushFinalBlockAsync().ConfigureAwait(false);
         return dataStream;
+    }
+
+    public byte[] CalculateCredentialsHash()
+    {
+        if (!Ready)
+            throw new InvalidOperationException("Packet encryptor is not sufficiently configured.");
+
+        using var sha256 = SHA256.Create();
+        var sharedKeyHash = sha256.ComputeHash(sharedKey);
+        var ivHash = sha256.ComputeHash(aesIV);
+        return sha256.ComputeHash(sharedKeyHash.Concat(ivHash).ToArray());
     }
 
     private static byte[] CalculateIV(byte[] iv, int serialNumber)
@@ -96,4 +107,5 @@ internal class PacketEncryptor : IDisposable
             .Concat(iv[sizeof(int)..])
             .ToArray();
     }
+    
 }

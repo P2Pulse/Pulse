@@ -1,18 +1,12 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Pulse.Cli;
 using Pulse.Core;
+using Pulse.Core.Authentication;
 using Pulse.Core.Calls;
 
 var services = new ServiceCollection();
-const string serverHttpClient = "Pulse.Server";
-services.AddHttpClient(serverHttpClient, client =>
-{
-    client.BaseAddress = new Uri("https://pulse.gurgaller.com");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ5b3RhbSIsIm5iZiI6MTY2MzQxNDg5NywiZXhwIjoxNjY0MDE5Njk3LCJpYXQiOjE2NjM0MTQ4OTd9.QEbafJDu3GVVaefZdtZEKIWCaS0-OLgsaGTz05tNSAE");
-});
-services.AddTransient(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient(serverHttpClient));
+const string myToken = "MY_TOKEN";
+services.AddSingleton<IAccessTokenStorage>(new ImmutableAccessTokenStorage(myToken));
 services.AddPulse();
 
 var serviceProvider = services.BuildServiceProvider();
@@ -27,19 +21,32 @@ if (answer == "i")
     var callee = Console.ReadLine();
     Console.WriteLine("Calling...");
     var callInitiator = serviceProvider.GetRequiredService<ICallInitiator>();
-    var stream = await callInitiator.CallAsync(callee!);
+    var call = await callInitiator.CallAsync(callee!);
+    await using var audioStream = call.Stream;
 
+    await using var fileStream = File.Create("output.wav");
     await using var file = File.OpenRead("music.wav");
-    await Task.Delay(75);  // TODO on a lower level - Let's wait a bit for the other party to be ready
-    var sw = Stopwatch.StartNew();
-    await file.CopyToAsync(stream, bufferSize: 320);  // TODO: put this on a lower level
-    sw.Stop();
-    Console.WriteLine($"Sent {file.Length} bytes in {sw.Elapsed.TotalSeconds} seconds");
+    
+    var receive = audioStream.CopyToAsync(fileStream);
+    var send = file.CopyToAsync(audioStream, bufferSize: 320);
+    await Task.WhenAll(send, receive);
 }
 else
 {
+    File.Delete("output.wav");
     Console.WriteLine("Polling...");
-    _ = serviceProvider.GetRequiredService<IncomingCallPoller>();
+    var poller = serviceProvider.GetRequiredService<IncomingCallPoller>();
+    string? username = null;
+    while ((username = await poller.PollAsync()) is null)
+    {
+        await Task.Delay(200);
+    }
+    Console.WriteLine($"Incoming call from {username}");
+    var callAcceptor = serviceProvider.GetRequiredService<ICallAcceptor>();
+    var call = await callAcceptor.AnswerCallAsync();
+    await using var stream = call.Stream;
+    await using var fileStream = File.Create("output.wav");
+    await stream.CopyToAsync(fileStream);
 }
 
 

@@ -2,5 +2,7 @@
 
 public interface ICallAcceptor
 {
-    Task<Stream> AnswerCallAsync(CancellationToken ct = default);
+    Task<Call> AnswerCallAsync(CancellationToken ct = default);
+
+    Task DeclineCallAsync(CancellationToken cancellationToken = default);
 }

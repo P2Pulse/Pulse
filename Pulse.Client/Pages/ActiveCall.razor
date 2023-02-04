@@ -1,0 +1,163 @@
+﻿@page "/ActiveCall"
+@using Pulse.Client.Calls
+@using Pulse.Client.Audio
+@using Android.Media
+@using Stream = System.IO.Stream
+@using Android.Content
+@using System.Diagnostics
+@inject CurrentCallAccessor CallAccessor
+@inject Microphone Microphone
+@inject Speaker Speaker
+@inject NavigationManager NavigationManager
+@inject HttpClient Server
+
+<MudPaper Class="pa-4 ma-4" Height="85vh">
+    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center">
+        <Avatar Username="@currentCall.OtherUser" />
+        <MudText Typo="Typo.h2">@currentCall.OtherUser</MudText>
+        @if (!currentCall.Connection.IsCompleted)
+        {
+            <p>Connecting...</p>
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+        }
+        else if (currentCall.Connection.IsFaulted)
+        {
+            <MudAlert Severity="Severity.Error">Could not connect!</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body1">Connected!</MudText>
+            <MudText Typo="Typo.body1">@stopwatch.Elapsed.ToString(@"hh\:mm\:ss")</MudText>
+            <div class="d-flex justify-center" style="width: 100%">
+                <div class="d-flex flex-wrap justify-center" style="width: 50%">
+                    @foreach (var emoji in emojis)
+                    {
+                        <MudText Typo="Typo.h4" Style="text-align: center; flex: 25%" Class="mr-1 ml-1 pa-0">@emoji</MudText>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="mt-10 d-flex flex-grow-1 gap-4 justify-space-evenly">
+            <MudFab Class="@(speakerOn ? "white" : "mud-theme-primary")"
+                    Color="@(speakerOn ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleSpeaker"
+                    StartIcon="@(speakerOn ? Icons.Material.Filled.VolumeUp : Icons.Material.Outlined.VolumeUp)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(speakerOn ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+            <MudFab Class="@(onHold ? "white" : "mud-theme-primary")"
+                    Color="@(onHold ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleHold"
+                    Disabled="muted"
+                    StartIcon="@(onHold ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Pause)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(onHold ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+            <MudFab Class="@(muted ? "white" : "mud-theme-primary")"
+                    Color="@(muted ? Color.Surface : Color.Primary)"
+                    OnClick="ToggleMute"
+                    Disabled="onHold"
+                    StartIcon="@(muted ? Icons.Material.Filled.MicOff : Icons.Material.Outlined.MicOff)"
+                    IconSize="Size.Large"
+                    Size="Size.Large"
+                    IconColor="@(muted ? Color.Primary : Color.Surface)"
+                    DisableRipple="true"/>
+
+        </div>
+        <MudFab Icon="@Icons.Filled.CallEnd" Style="bottom: 0" Class="position-absolute mb-10" Color="Color.Error" OnClick="HangUpAsync"></MudFab>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private Call currentCall;
+    private Stream? callAudioStream;
+    private bool speakerOn;
+    private string[] emojis = { };
+    private bool muted;
+    private bool onHold;
+    private Stopwatch stopwatch = new();
+    private string? callId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentCall = CallAccessor.CurrentCall!;
+            
+            var call = await currentCall.Connection;
+            if (call is null)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            callId = call.CallId;
+            
+            await using var audioStream = call.Stream;
+            emojis = Emojis.GetEmojisForHash(call.EncryptedStreamCredentialsHash);
+
+            stopwatch.Start();
+            await using var timer = new Timer(async _ => { await InvokeAsync(StateHasChanged); }, null, (long)0, 100);
+            StateHasChanged();
+
+            callAudioStream = audioStream;
+            var microphoneRecording = new CancellationTokenSource();
+            _ = Task.Run(() => Microphone.RecordAsync(audioStream, microphoneRecording.Token), microphoneRecording.Token);
+            await Speaker.PlayAsync(audioStream); // Assuming the stream will end at the end of the call
+            microphoneRecording.Cancel();
+            Microphone.StopRecording();
+        }
+        catch
+        {
+            // ignored
+        }
+        finally
+        {
+            CallAccessor.CurrentCall = null;
+            if (callId is not null)
+                await Server.PutAsync($"calls/{callId}/ending", content: null);
+            
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task HangUpAsync()
+    {
+        if (callAudioStream != null)
+            await callAudioStream.DisposeAsync(); // Will send hangup signal to the other user
+    }
+
+    private void ToggleSpeaker()
+    {
+        speakerOn = !speakerOn;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.SpeakerphoneOn = speakerOn;
+    }
+
+    private void ToggleMute()
+    {
+        muted = !muted;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.MicrophoneMute = muted;
+    }
+
+    private void ToggleHold()
+    {
+        onHold = !onHold;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.MicrophoneMute = onHold;
+
+        audioManager.AdjustSuggestedStreamVolume(onHold ? Adjust.Mute : Adjust.Unmute,
+            Android.Media.Stream.VoiceCall,
+            VolumeNotificationFlags.RemoveSoundAndVibrate);
+    }
+
+}

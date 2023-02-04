@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using STUN;
@@ -11,25 +12,24 @@ internal class PortBruteForceNatTraversal
 
     public PortBruteForceNatTraversal()
     {
-        receiver = new UdpClient
-        {
-            ExclusiveAddressUse = false
-        };
-        receiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        receiver = new UdpClient();
         receiver.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
     }
 
     public async Task<IConnection> EstablishConnectionAsync(IPAddress destination, int minPort, int maxPort,
         CancellationToken cancellationToken = default)
     {
+        // destination = IPAddress.Parse("18.198.4.113");
+        // maxPort = 15000 + (maxPort - minPort);
+        // minPort = 15000;
         IPEndPoint? messageRemoteEndPoint = null;
         var connectionInitiated = false;
         _ = Task.Run(async () =>
         {
             try
             {
-                var message = await receiver.ReceiveAsync(cancellationToken);
-                Console.WriteLine($"Got punching message: {Encoding.ASCII.GetString(message.Buffer)}");
+                var message = await receiver.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                Console.WriteLine($"Got a punching message: {Encoding.ASCII.GetString(message.Buffer)}");
                 messageRemoteEndPoint = message.RemoteEndPoint;
                 connectionInitiated = true;
             }
@@ -39,35 +39,54 @@ internal class PortBruteForceNatTraversal
             }
         }, cancellationToken);
 
-        using var sender = new UdpClient();
-        sender.ExclusiveAddressUse = false;
-        sender.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        sender.Client.Bind(receiver.Client.LocalEndPoint!);
-        var port = ((IPEndPoint)receiver.Client.LocalEndPoint!).Port;
+        using var sender = new UdpClient
+        {
+            Client = receiver.Client
+        };
         Console.WriteLine("Starting to punch holes");
 
-        while (true)
+        for (var k = 0; k < 4; k++)
         {
+            if (k != 0)
+            {
+                Console.WriteLine("Waiting a little before the next rounds to let the other party punch the NAT.");
+                await Task.Delay(1250 * k, cancellationToken).ConfigureAwait(false);
+            }
+
+            var message = Encoding.ASCII.GetBytes("Punch!");
             for (var destinationPort = minPort; destinationPort <= maxPort; destinationPort++)
             {
                 if (connectionInitiated)
                 {
-                    sender.Dispose();
-                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken);
-                    var datagram = Encoding.ASCII.GetBytes("Knockout");
-                    await receiver.SendAsync(datagram, cancellationToken);
+                    sender.Client =
+                        null; // Prevents closing the socket when disposing the client because we are using the same socket for both sending and receiving
+                    await receiver.Client.ConnectAsync(messageRemoteEndPoint, cancellationToken).ConfigureAwait(false);
+                    for (var i = 0; i < 20; i++)
+                    {
+                        var datagram = Encoding.ASCII.GetBytes("Knockout");
+                        await receiver.SendAsync(datagram, cancellationToken).ConfigureAwait(false);
+                        Sleep(TimeSpan.FromMilliseconds(2.5));
+                    }
+
                     return new UdpChannel(receiver);
                 }
 
                 var endpoint = new IPEndPoint(destination, destinationPort);
-                var message = Encoding.ASCII.GetBytes("Punch!");
-                await sender.SendAsync(message, endpoint, cancellationToken);
-                if (destinationPort % 5 is 0)
-                    await Task.Delay(5, cancellationToken);
+                await sender.SendAsync(message, endpoint, cancellationToken).ConfigureAwait(false);
+                Sleep(TimeSpan.FromMilliseconds(7));
             }
 
             Console.WriteLine("loop");
         }
+
+        throw new Exception("Could not establish connection ):");
+    }
+
+    private static void Sleep(TimeSpan duration)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (stopwatch.Elapsed < duration)
+            ;
     }
 
     private static async Task<IPEndPoint> GetPublicIPEndpointAsync(Socket socket, string hostName,
@@ -75,33 +94,39 @@ internal class PortBruteForceNatTraversal
     {
         while (true)
         {
-            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken)).First();
+            var serverIp = (await Dns.GetHostAddressesAsync(hostName, cancellationToken).ConfigureAwait(false)).First();
             var server = new IPEndPoint(serverIp, 3478);
-            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP);
+            var result = await STUNClient.QueryAsync(socket, server, STUNQueryType.PublicIP).ConfigureAwait(false);
             if (result?.PublicEndPoint is not null)
                 return result.PublicEndPoint;
-            await Task.Delay(50, cancellationToken);
+            await Task.Delay(50, cancellationToken).ConfigureAwait(false);
         }
     }
 
     public async Task<(IPAddress, int minPort, int maxPort)> PredictMinMaxPortsAsync(
         CancellationToken cancellationToken = default)
     {
-        var s1 = "stun.schlund.de";
-        var s2 = "stun.jumblo.com";
-        var stunQueriesS1 = Enumerable.Range(0, 2)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken));
+        const string s1 = "stun.schlund.de";
+        const string s2 = "stun.jumblo.com";
 
-        var stunQueriesS2 = Enumerable.Range(0, 2)
-            .Select(i => GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken));
+        var ipEndPoints = new List<IPEndPoint>
+        {
+            await GetPublicIPEndpointAsync(receiver.Client, s1, cancellationToken).ConfigureAwait(false),
+            await GetPublicIPEndpointAsync(receiver.Client, s2, cancellationToken).ConfigureAwait(false)
+        };
 
-        var responses = await Task.WhenAll(stunQueriesS1.Concat(stunQueriesS2));
-        var ports = responses.Select(r => r.Port).ToList();
+        var ports = ipEndPoints.Select(i => i.Port).ToList();
+
+        Console.WriteLine(string.Join(",", ipEndPoints));
+        var myIp4Address = ipEndPoints.First().Address;
+
         var max = ports.Max();
         var min = ports.Min();
-        min = Math.Max(min - 100, 1);
-        max = Math.Min(max + 100, ushort.MaxValue);
-        var myIp4Address = responses.First().Address;
+        if (min == max) // in case it's not a symmetric NAT
+            return (myIp4Address, min, max);
+
+        min = Math.Max(min - 375, 1);
+        max = Math.Min(max + 375, ushort.MaxValue);
         return (myIp4Address, min, max);
     }
 }

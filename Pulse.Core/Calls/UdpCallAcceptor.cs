@@ -15,15 +15,30 @@ internal class UdpCallAcceptor : ICallAcceptor
         this.connectionFactory = connectionFactory;
     }
 
-    public async Task<Stream> AnswerCallAsync(CancellationToken ct = default)
+    public async Task<Call> AnswerCallAsync(CancellationToken ct = default)
     {
-        return await connectionFactory.ConnectAsync(async myInfo =>
+        var encryptedStream = await connectionFactory.ConnectAsync(async myInfo =>
         {
             Console.WriteLine("Answering call...");
-            var response = await httpClient.PostAsJsonAsync(Endpoint, myInfo, ct);
-            response.EnsureSuccessStatusCode();
+            var response = await httpClient.PostAsJsonAsync(Endpoint, myInfo, ct).ConfigureAwait(false);
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false), e);
+            }
 
-            return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct))!;
-        }, ct);
+            return (await response.Content.ReadFromJsonAsync<ConnectionDetails>(cancellationToken: ct).ConfigureAwait(false))!;
+        }, ct).ConfigureAwait(false);
+
+        return new Call(CallId: null, encryptedStream.Stream, encryptedStream.CredentialsHash);
+    }
+
+    public async Task DeclineCallAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync("calls/incoming", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
     }
 }

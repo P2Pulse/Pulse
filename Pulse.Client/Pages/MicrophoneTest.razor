@@ -1,0 +1,39 @@
+@page "/MicrophoneTest"
+@using Pulse.Client.Audio
+@using Android.Media
+@using Android.Content
+<h3>MicrophoneTest</h3>
+<MudFab Color="Color.Primary" OnClick="Test" Label="Test!" StartIcon="@Icons.Material.Filled.Speaker"/>
+<MudToggleIconButton Icon="@Icons.Material.Filled.Campaign"
+                             Toggled="@speakerOn"
+                             ToggledChanged="ToggleSpeaker"
+                             Color="@Color.Dark" Title="Off"
+                             ToggledIcon="@Icons.Material.Outlined.Campaign" ToggledColor="@Color.Dark"
+                             ToggledTitle="On"/>
+
+@code {
+    private bool speakerOn;
+
+    private async Task Test()
+    {
+        var ctx = new CancellationTokenSource();
+        var microphone = new Microphone();
+        var speaker = new Speaker();
+        // record for 5 seconds and then loop it back
+        var stream = new MemoryStream();
+        _ = microphone.RecordAsync(stream, ctx.Token);
+        await Task.Delay(6000);
+        stream.Position = 0;
+        await speaker.PlayAsync(stream);
+        ctx.Cancel();
+    }
+
+    private void ToggleSpeaker()
+    {
+        speakerOn = !speakerOn;
+        var context = Android.App.Application.Context;
+        var audioManager = (AudioManager)context.GetSystemService(Context.AudioService)!;
+        audioManager.SpeakerphoneOn = speakerOn;
+    }
+
+}

@@ -1,0 +1,74 @@
+﻿@using Pulse.Core.Authentication
+@inherits LayoutComponentBase
+@inject IAccessTokenStorage AccessTokenStorage
+@inject NavigationManager NavigationManager
+
+<MudThemeProvider IsDarkMode="true"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudLayout>
+    <MudAppBar Elevation="3">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+        <MudSpacer/>
+        <MudImage Src="/logo.png" Height="90" Style="margin-top: 25px"/>
+        <MudSpacer/>
+        <MudIconButton Style="visibility: hidden" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
+    </MudAppBar>
+    <MudDrawer @bind-Open="@drawerOpen">
+        <MudDrawerHeader Style="margin-bottom: 20px">
+            <MudStack Style="margin: 20px auto 0 auto;">
+                <Avatar Username="@CurrentUsername" />
+                <MudChip Style="width: fit-content; margin: 0 auto" Disabled="true" Icon="@Icons.Filled.AlternateEmail">@CurrentUsername</MudChip>
+            </MudStack>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Mic" IconColor="Color.Inherit" Href="/MicrophoneTest">Microphone Test</MudNavLink>
+            @if (AccessTokenStorage.AccessToken is null)
+            {
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Login" IconColor="Color.Inherit" Href="/Login">Log In / Sign Up</MudNavLink>
+            }
+            else
+            {
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Call" IconColor="Color.Inherit" Href="/">Dial</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.History" IconColor="Color.Inherit" Href="/CallHistory">Call History</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Filled.Logout" IconColor="Color.Inherit" OnClick="LogOutAsync">Log Out</MudNavLink>
+            }
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+
+@code
+{
+    private string CurrentUsername => Preferences.Default.Get("logged-in-user", defaultValue: "guest:)");
+    private bool drawerOpen;
+
+    protected override void OnInitialized()
+    {
+        RedirectToLoginPageIfNecessary();
+
+        AccessTokenStorage.OnTokenChange += RedirectToLoginPageIfNecessary;
+    }
+
+    private void RedirectToLoginPageIfNecessary()
+    {
+        if (AccessTokenStorage.AccessToken is not null || new Uri(NavigationManager.Uri).PathAndQuery.StartsWith("Login")) 
+            return;
+        
+        NavigationManager.NavigateTo("/Login");
+        drawerOpen = false;
+    }
+
+    private void ToggleDrawer()
+    {
+        drawerOpen = !drawerOpen;
+    }
+
+    private async Task LogOutAsync()
+    {
+        await AccessTokenStorage.RemoveTokenAsync();
+    }
+}

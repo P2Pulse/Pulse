@@ -1,0 +1,24 @@
+﻿@page "/counter"
+@using Android.Media
+
+<h1>Play some music</h1>
+
+<button class="btn btn-primary" @onclick="Play">Click me to play the pink panther!</button>
+
+@code {
+
+    private async Task Play()
+    {
+        await using var fileStream = await FileSystem.OpenAppPackageFileAsync("Audio/music.wav");
+        var audioTrack = new AudioTrack(Stream.Music, 16_000, ChannelOut.Mono, Encoding.Pcm16bit, 320, AudioTrackMode.Stream);
+        audioTrack.Play();
+
+        var buffer = new byte[320];
+        int bytesRead;
+        while ((bytesRead = fileStream.Read(buffer)) != 0)
+        {
+            await audioTrack.WriteAsync(buffer, 0, bytesRead);
+        }
+    }
+
+}

@@ -1,0 +1,53 @@
+﻿@using Pulse.Client.Calls
+@using Android.Content
+@using Android.App
+@inject IncomingCallPoller IncomingCallPoller
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<Router AppAssembly="@typeof(Main).Assembly">
+	<Found Context="routeData">
+		<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+	</Found>
+	<NotFound>
+		<LayoutView Layout="@typeof(MainLayout)">
+			<p role="alert">Sorry, there's nothing at this address.</p>
+		</LayoutView>
+	</NotFound>
+</Router>
+
+@code
+{
+	protected override async Task OnInitializedAsync()
+	{
+		IncomingCallPoller.OnIncomingCall += async username =>
+		{
+			var shouldAnswerCall = await DialogService.ShowMessageBox($"Incoming Call From {username}",
+				$"{username} is calling you. Do you wish to accept the call?", yesText: "Answer",
+				noText: "Decline");
+			return shouldAnswerCall.GetValueOrDefault();
+		};
+		
+		IncomingCallPoller.OnCallAnswer += () => NavigationManager.NavigateTo("/ActiveCall");
+		
+		var permissionStatus = await Permissions.RequestAsync<Permissions.Microphone>();
+		if (permissionStatus != PermissionStatus.Granted)
+		{
+			await DialogService.ShowMessageBox("Missing Microphone Permission", 
+				$"In order to use {nameof(Pulse)}, you must give the app permission to access your phone's microphone.", 
+				yesText: "Open Settings");
+
+			OpenAppSettings();
+		}
+	}
+	
+	private void OpenAppSettings()
+	{
+		var intent = new Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
+		intent.AddFlags(ActivityFlags.NewTask);
+		var uri = Android.Net.Uri.FromParts("package", "com.company.pulse", null);
+		intent.SetData(uri);
+		Application.Context.StartActivity(intent);
+	}
+}

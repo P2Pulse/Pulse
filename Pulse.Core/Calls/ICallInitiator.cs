@@ -2,5 +2,5 @@
 
 public interface ICallInitiator
 {
-    Task<Stream> CallAsync(string username, CancellationToken ct = default);
+    Task<Call?> CallAsync(string username, CancellationToken ct = default);
 }
